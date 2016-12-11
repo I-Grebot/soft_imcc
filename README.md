@@ -1,1 +1,1 @@
-# soft_imcc
+# IgreBot's Mission Control Center (IMCC)
