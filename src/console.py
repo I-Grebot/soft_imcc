@@ -16,6 +16,10 @@ class ConsoleStream(object):
     def write(self, text):
         self.queue.put(text)
 
+    def flush(self):
+        pass
+
+
 # A QObject (to be run in a QThread) which sits waiting for data to come through a Queue.Queue().
 # It blocks until data is available, and one it has got something from the queue, it sends
 # it to the "MainThread" by emitting a Qt Signal
@@ -31,13 +35,6 @@ class ConsoleReceiver(QObject):
         while True:
             text = self.queue.get()
             self.mysignal.emit(text)
-
-# An example QObject (to be run in a QThread) which outputs information with print
-class LongRunningThing(QObject):
-    @pyqtSlot()
-    def run(self):
-        for i in range(1000):
-            print(i)
 
 class Console(Ui_console):
 
@@ -73,9 +70,3 @@ class Console(Ui_console):
             self.append_text(self.lineEdit_input.text())
             self.append_text('\n')
             self.lineEdit_input.clear()
-
-        #self.thread = QThread()
-        #self.long_running_thing = LongRunningThing()
-        #self.long_running_thing.moveToThread(self.thread)
-        #self.thread.started.connect(self.long_running_thing.run)
-        #self.thread.start()

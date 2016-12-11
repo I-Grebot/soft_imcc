@@ -18,7 +18,7 @@ if __name__ == '__main__':
     stdoutQueue = Queue()
     sys.stdout = ConsoleStream(stdoutQueue)
 
-    # Create thread that will listen on the other end of the queue, and send the text to the textedit in our application
+    # Create thread that will listen on the consoleStream and put the content in the console
     consoleReceiverThread = QThread()
     consoleReceiver = ConsoleReceiver(stdoutQueue)
     consoleReceiver.mysignal.connect(imcc.append_console)
@@ -34,4 +34,5 @@ if __name__ == '__main__':
 
     # Show everything and run the app!
     imcc.show()
+
     sys.exit(app.exec_())
