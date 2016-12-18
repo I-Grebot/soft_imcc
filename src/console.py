@@ -7,6 +7,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 from ui.console import Ui_console
+from cli import Cli
 
 # Stream object that simply put incoming data in a queue
 class ConsoleStream(object):
@@ -18,7 +19,6 @@ class ConsoleStream(object):
 
     def flush(self):
         pass
-
 
 # A QObject (to be run in a QThread) which sits waiting for data to come through a Queue.Queue().
 # It blocks until data is available, and one it has got something from the queue, it sends
@@ -41,7 +41,8 @@ class Console(Ui_console):
     # -------------------------------------------------------------------------
     # Constructor
     # -------------------------------------------------------------------------
-    def __init__(self, dockwidget):
+    def __init__(self, dockwidget, cli):
+        self.cli = cli
         self.setupUi(dockwidget)
         self.connect()
 
@@ -65,8 +66,17 @@ class Console(Ui_console):
         self.textEdit_output.clear()
 
     def send(self):
-        if len(self.lineEdit_input.text()) > 0:
+        cmd_str = self.lineEdit_input.text()
+        if len(cmd_str) > 0:
+
+            # Add line terminator
+            cmd_str += '\n'
+
+            # Append testEdit display and flush lineEdit
             self.append_text('> ')
-            self.append_text(self.lineEdit_input.text())
-            self.append_text('\n')
+            self.append_text(cmd_str)
             self.lineEdit_input.clear()
+
+            # Send command
+            self.cli.send(cmd_str)
+

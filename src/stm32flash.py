@@ -5,6 +5,7 @@
 import sys
 import glob
 import serial
+from serial.tools import list_ports
 from multiprocessing import Process
 
 from PyQt5.QtCore import *
@@ -19,8 +20,6 @@ class Stm32Flash(Ui_stm32flash):
     # -------------------------------------------------------------------------
 
     BINARY_PATH = '..\\bin\\stm32flash.exe'
-
-    COM_MAX_NB_PORTS = 50
 
     MODES = ['8e1', '8n1']
     BAUDRATES = ['1200',
@@ -67,7 +66,6 @@ class Stm32Flash(Ui_stm32flash):
         self.pushButton_browse.clicked.connect(self.action_browse)
         self.pushButton_abort.clicked.connect(self.action_abort)
 
-
         # Output
         self.process.readyReadStandardOutput.connect(self.data_is_ready)
 
@@ -84,33 +82,6 @@ class Stm32Flash(Ui_stm32flash):
     # -------------------------------------------------------------------------
     # Internal handlers
     # -------------------------------------------------------------------------
-    def get_serial_ports(self):
-        """ Lists serial port names
-
-            :raises EnvironmentError:
-                On unsupported or unknown platforms
-            :returns:
-                A list of the serial ports available on the system
-        """
-        if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(self.COM_MAX_NB_PORTS)]
-        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # this excludes your current terminal "/dev/tty"
-            ports = glob.glob('/dev/tty[A-Za-z]*')
-        elif sys.platform.startswith('darwin'):
-            ports = glob.glob('/dev/tty.*')
-        else:
-            raise EnvironmentError('Unsupported platform')
-
-        result = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                result.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        return result
 
     def get_mode(self):
         return self.comboBox_mode.currentText()
@@ -131,11 +102,10 @@ class Stm32Flash(Ui_stm32flash):
         return self.checkBox_start.isChecked()
 
     def fill_com_ports(self):
-        ports = self.get_serial_ports()
-
         self.comboBox_port.clear()
-        for port in ports:
-            self.comboBox_port.addItem(port)
+        for port in serial.tools.list_ports.comports():
+            self.comboBox_port.addItem(port.device)
+
 
     def fill_modes(self):
         self.comboBox_mode.clear()
