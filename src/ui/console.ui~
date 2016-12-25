@@ -23,6 +23,12 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
+      </property>
       <widget class="QWidget" name="tab_serial">
        <attribute name="title">
         <string>Serial</string>
@@ -66,6 +72,11 @@
          </layout>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tab_python">
+       <attribute name="title">
+        <string>Python Console</string>
+       </attribute>
       </widget>
      </widget>
     </item>

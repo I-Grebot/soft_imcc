@@ -7,6 +7,8 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.dockarea import *
 
 class Ui_imcc(object):
     def setupUi(self, imcc):
@@ -14,6 +16,11 @@ class Ui_imcc(object):
         imcc.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(imcc)
         self.centralwidget.setObjectName("centralwidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.graphicsView = DockArea(self.centralwidget)
+        self.graphicsView.setObjectName("graphicsView")
+        self.horizontalLayout.addWidget(self.graphicsView)
         imcc.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(imcc)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -80,4 +87,3 @@ class Ui_imcc(object):
         self.action_openConfiguration.setText(_translate("imcc", "Configuration"))
         self.action_viewConsole.setText(_translate("imcc", "Console"))
         self.action_viewBootload.setText(_translate("imcc", "STm32 Bootload"))
-
