@@ -79,4 +79,3 @@ class Console(Ui_console):
 
             # Send command
             self.cli.send(cmd_str)
-
