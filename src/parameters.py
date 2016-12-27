@@ -36,6 +36,7 @@ class ScalableGroup(pTypes.GroupParameter):
         opts['type'] = 'group'
         opts['addText'] = "Add"
         opts['addList'] = ['str', 'float', 'int']
+
         pTypes.GroupParameter.__init__(self, **opts)
 
     def addNew(self, typ):
@@ -45,7 +46,7 @@ class ScalableGroup(pTypes.GroupParameter):
             'int': 0
         }[typ]
         self.addChild(
-            dict(name="ScalableParam %d" % (len(self.childs) + 1), type=typ, value=val, removable=True, renamable=True))
+            dict(name="ScalableParam %d" % (len(self.childs) + 1), type=typ, removable=True, renamable=True))
 
 
 class Parameters(ParameterTree):
