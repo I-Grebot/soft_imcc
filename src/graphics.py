@@ -25,15 +25,16 @@ class PlotParameter(pTypes.GroupParameter):
         opts['type'] = 'str'
 
         pTypes.GroupParameter.__init__(self, **opts)
+        self.addChild({'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"})
         self.addChild({'name': 'Color', 'type': 'color', 'value': "FF0", 'tip': "Foreground color"})
-        self.addChild({'name': 'Width', 'type': 'float', 'value': 2, 'limits': (1, 10), 'default': 2})
+        self.addChild({'name': 'Width', 'type': 'float', 'value': 2, 'limits': (0, 10), 'default': 2})
         self.addChild({'name': 'Style', 'type': 'list', 'values': {
                         "Solid"         : QtCore.Qt.SolidLine,
                         "Dash"          : QtCore.Qt.DashLine,
                         "Dot"           : QtCore.Qt.DotLine,
                         "Dash-Dot"      : QtCore.Qt.DashDotLine,
                         "Dash-Dot-Dot"  : QtCore.Qt.DashDotDotLine
-                    }, 'default': "Solid"})
+                    }, 'value': QtCore.Qt.SolidLine})
 
         # Data
         self.nb_points = 500
@@ -48,14 +49,21 @@ class PlotParameter(pTypes.GroupParameter):
                             style=self.param('Style').value())
 
         # Holder for the plotDataItem
+        self.widget = pg.PlotWidget()
         self.plot = pg.PlotDataItem()
 
         # Slots Connections
         self.param('Color').sigValueChanged.connect(self.update_color)
         self.param('Width').sigValueChanged.connect(self.update_width)
         self.param('Style').sigValueChanged.connect(self.update_style)
+        self.param('Visible').sigValueChanged.connect(self.update_visibility)
+        self.sigRemoved.connect(self.remove_plot)
+
+    def get_plot(self):
+        return self.plot
 
     def setup_plot(self, widget):
+        self.widget = widget
         self.plot = widget.plot(x=self.x, y=self.y, pen=self.pen)
 
     def update_color(self):
@@ -70,6 +78,11 @@ class PlotParameter(pTypes.GroupParameter):
         self.pen.setStyle(self.param('Style').value())
         self.plot.setPen(self.pen)
 
+    def update_visibility(self):
+        self.plot.setVisible(self.param('Visible').value())
+
+    def remove_plot(self):
+        self.widget.removeItem(self.plot)
 
 # A plot window, that can hold multiple plots
 class PlotWindowParameter(pTypes.GroupParameter):
@@ -88,29 +101,45 @@ class PlotWindowParameter(pTypes.GroupParameter):
         self.addChild({'name': 'Grid', 'type': 'bool', 'value': True, 'tip': "Toggle grid on/off"})
 
         # Actual dock & plot widget
-        self.dock = Dock(self.name(), size=(500, 400), closable=True, autoOrientation=False)
+        self.dock = Dock(self.name(), size=(500, 400), closable=False, autoOrientation=False)
+
+        self.dock_area = DockArea()
         self.plot_widget = pg.PlotWidget()
-        self.plot_widget.showGrid(x=True, y=True) # Parameters TODO
+        self.update_grid()
         self.dock.addWidget(self.plot_widget) # Separate plot_widget per dock todo
 
         # Slots connections
         self.sigNameChanged.connect(self.update_name)
+        self.sigRemoved.connect(self.remove_dock)
+        self.param('Grid').sigValueChanged.connect(self.update_grid)
+        self.param('Visible').sigValueChanged.connect(self.update_visibility)
 
-    # TODO: Prevent adding twice the same plot (this is stupid)
     def addNew(self, typ):
         nb_plots = len(self.childs)-2 # 2 statics
-
         new_kid = self.addChild(PlotParameter(name=typ, value=typ, removable=True, renamable=False),
                                 autoIncrementName=True)
         new_kid.param('Color').setValue(self.COLORS[nb_plots % len(self.COLORS)])
         new_kid.setup_plot(self.plot_widget)
 
-
-    def getDock(self):
+    def get_dock(self):
         return self.dock
+
+    def setup_dock(self, dock_area):
+        self.dock_area = dock_area
+        self.dock_area.addDock(self.dock, 'bottom')
 
     def update_name(self):
         self.dock.setTitle(self.name())
+
+    def update_grid(self):
+        self.plot_widget.showGrid(x=self.param('Grid').value(), y=self.param('Grid').value())
+
+    def update_visibility(self):
+        self.dock.setVisible(self.param('Visible').value())
+
+    def remove_dock(self):
+        self.dock.close()
+
 
 # Custom group for grouping plots. Add an action button for adding a new plot
 class PlotsGroup(pTypes.GroupParameter):
@@ -167,61 +196,49 @@ class Graphics(QDockWidget):
 
         self.setWidget(self.dock_area)
 
-        self.plot_docks = list()
+        self.parameters_dock = Dock("Graphics Configuration",
+                                    size=(100, 400),
+                                    closable=False,)
 
-        new_plot_dock = Dock("Plot", size=(500, 400), closable=True, autoOrientation=False)
-        self.plot_docks.append(new_plot_dock)
-
-        self.parameters_dock = Dock("Graphics", size=(100, 400), closable=False)
-
-        self.dock_area.addDock(new_plot_dock, 'top')
         self.dock_area.addDock(self.parameters_dock, 'right')
 
         # Parameters dock
         self.parameters_dock.addWidget(self.graphics_parameter)
 
-        self.plot_widgets = list()
 
+        # TEMP TESTS
 
+        # self.plot_widgets = list()
 
         # Plot widget test
-        new_plot_widget = pg.PlotWidget(title="This is a test")
+        # new_plot_widget = pg.PlotWidget(title="This is a test")
+        #
+        # pen_act = pg.mkPen((0, 200, 0, 255), width=2)
+        # pen_des = pg.mkPen((200, 0, 0, 255), width=2)
+        # brush_fill = (100, 0, 100, 100)
+        #
+        # self.nb_points = 500
+        # self.step = 0.1
+        # self.cnt = 0
+        #
+        # self.x = np.arange(-self.nb_points * self.step, 0, self.step)
+        # self.y1 = np.zeros(self.nb_points)
+        # self.y2 = np.zeros(self.nb_points)
+        #
+        # self.plot1 = new_plot_widget.plot(x=self.x, y=self.y1, pen=pen_act)
+        # self.plot2 = new_plot_widget.plot(x=self.x, y=self.y2, pen=pen_des)
+        # self.fill = pg.FillBetweenItem(self.plot1, self.plot2, brush=brush_fill)
+        # new_plot_widget.addItem(self.fill)
 
-        pen_act = pg.mkPen((0, 200, 0, 255), width=2)
-        pen_des = pg.mkPen((200, 0, 0, 255), width=2)
-        brush_fill = (100, 0, 100, 100)
 
-        self.nb_points = 500
-        self.step = 0.1
-        self.cnt = 0
 
-        self.x = np.arange(-self.nb_points * self.step, 0, self.step)
-        self.y1 = np.zeros(self.nb_points)
-        self.y2 = np.zeros(self.nb_points)
-
-        self.plot1 = new_plot_widget.plot(x=self.x, y=self.y1, pen=pen_act)
-        self.plot2 = new_plot_widget.plot(x=self.x, y=self.y2, pen=pen_des)
-        self.fill = pg.FillBetweenItem(self.plot1, self.plot2, brush=brush_fill)
-        new_plot_widget.addItem(self.fill)
-
-        new_plot_widget.showGrid(x=True, y=True)
-
-        self.plot_widgets.append(new_plot_widget)
-
-        new_plot_dock.addWidget(new_plot_widget)
 
         # self.plot_widgets[0].clear()
 
     def add_plot_window(self, child, index):
+        index.setup_dock(self.dock_area)
         print('Added window ! # In list = ', len(self.p.param('Plots').childs))
         print('Window name = ', index.name(), ' value = ', index.value())
-
-        # new_plot_dock = Dock(index.name(), size=(500, 400), closable=True, autoOrientation=False)
-        # self.plot_docks.append(new_plot_dock)
-        # self.dock_area.addDock(new_plot_dock, 'bottom', self.plot_docks[0])
-        self.dock_area.addDock(index.getDock())
-
-        # new_plot_widget = pg.PlotWidget(title=index.name())
 
     def remove_plot_window(self, child):
         print('Removed window ! # In list = ', len(self.p.param('Plots').childs))
