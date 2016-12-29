@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import colorsys
+import time
+from PIL import Image
+from collections import deque
 
 # Qt Libraries
 from PyQt5 import QtCore
@@ -21,8 +23,22 @@ import numpy as np
 
 from ui.graphics import Ui_Graphics
 
+# Subclassing of pyqtgraph's AxisItem to display timed graphs
+class TimeAxisItem(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        strns = []
+        for x in values:
+            try:
+                strns.append(time.strftime("%H:%M:%S", time.localtime(x)))
+            except ValueError:  # Windows can't handle dates before 1970
+                strns.append('')
+        return strns
+
 # A single plot configuration
 class PlotParameter(pTypes.GroupParameter):
+
+    BUFFER_DEPTH = 200
+
     def __init__(self, **opts):
         opts['type'] = 'str'
 
@@ -38,13 +54,7 @@ class PlotParameter(pTypes.GroupParameter):
                         "Dash-Dot-Dot"  : QtCore.Qt.DashDotDotLine
                     }, 'value': QtCore.Qt.SolidLine})
 
-        # Data
-        self.nb_points = 500
-        self.step = 0.1
-        self.cnt = 0
-
-        self.x = np.arange(-self.nb_points * self.step, 0, self.step)
-        self.y = np.zeros(self.nb_points)
+        self.data = deque(maxlen=self.BUFFER_DEPTH)
 
         self.pen = pg.mkPen(color=self.param('Color').value(),
                             width=self.param('Width').value(),
@@ -66,7 +76,7 @@ class PlotParameter(pTypes.GroupParameter):
 
     def setup_plot(self, widget):
         self.widget = widget
-        self.plot = widget.plot(x=self.x, y=self.y, pen=self.pen)
+        self.plot = widget.plot(pen=self.pen, name=self.value())
 
     def update_color(self):
         self.pen.setColor(self.param('Color').value())
@@ -86,15 +96,11 @@ class PlotParameter(pTypes.GroupParameter):
     def remove_plot(self):
         self.widget.removeItem(self.plot)
 
-    def update_data(self, new_value):
-        self.x = np.roll(self.x, -1)
-        self.x[self.nb_points - 1] = self.cnt
-        self.y = np.roll(self.y, -1)
-        self.y[self.nb_points - 1] = new_value
-
-        self.plot.setData(self.x, self.y)
-
-        self.cnt += self.step
+    def add_data(self, timestamp, value):
+        self.data.append({'x': timestamp, 'y': value})
+        x = [item['x'] for item in self.data]
+        y = [item['y'] for item in self.data]
+        self.plot.setData(x=x, y=y)
 
 # A plot window, that can hold multiple plots
 class PlotWindowParameter(pTypes.GroupParameter):
@@ -113,10 +119,11 @@ class PlotWindowParameter(pTypes.GroupParameter):
         self.addChild({'name': 'Grid', 'type': 'bool', 'value': True, 'tip': "Toggle grid on/off"})
 
         # Actual dock & plot widget
-        self.dock = Dock(self.name(), size=(500, 400), closable=False, autoOrientation=False)
-
+        self.dock = Dock(self.name(), closable=False, autoOrientation=False)
         self.dock_area = DockArea()
-        self.plot_widget = pg.PlotWidget()
+        self.plot_widget = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
+        self.plot_widget.addLegend()
+
         self.update_grid()
         self.dock.addWidget(self.plot_widget) # Separate plot_widget per dock todo
 
@@ -152,7 +159,6 @@ class PlotWindowParameter(pTypes.GroupParameter):
     def remove_dock(self):
         self.dock.close()
 
-
 # Custom group for grouping plots. Add an action button for adding a new plot
 class PlotsGroup(pTypes.GroupParameter):
 
@@ -173,12 +179,14 @@ class PlotsGroup(pTypes.GroupParameter):
     def add_plot(self, child, index):
         self.plots_changed.emit(child, index)
 
-
 class Graphics(Ui_Graphics):
 
     params = [
         {'name': 'General Parameters', 'type': 'group', 'children': [
             {'name': 'Integer', 'type': 'int', 'value': 10},
+        ]},
+        {'name': 'Table View', 'type': 'group', 'children': [
+            {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"}
         ]},
         PlotsGroup(name="Plots"),
     ]
@@ -187,10 +195,9 @@ class Graphics(Ui_Graphics):
         self.win = QMainWindow()
         self.setupUi(self.win)
 
-        # super(Graphics, self).__init__()
-
         # Set some PyQtGraph global options
         pg.setConfigOptions(antialias=True)
+        pg.setConfigOptions(imageAxisOrder='row-major')
 
         self.dock_area = DockArea()
         self.graphics_parameter = ParameterTree(showHeader=False)
@@ -203,6 +210,41 @@ class Graphics(Ui_Graphics):
 
         self.graphics_parameter.setParameters(self.p, showTop=False)
 
+        self.setup_table_view()
+        self.setup_layout()
+
+
+    def setup_table_view(self):
+        self.dock_table = Dock("Table View", closable=False, autoOrientation=False)
+        self.dock_area.addDock(self.dock_table, 'top')
+
+        self.table_widget = pg.GraphicsLayoutWidget()
+        self.table_widget.setBackground('w')
+        self.table_viewbox = self.table_widget.addViewBox(row=1, col=1)
+        self.table_img = pg.ImageItem()
+        self.table_viewbox.addItem(self.table_img)
+        self.table_viewbox.setAspectLocked(True)
+
+        self.dock_table.addWidget(self.table_widget)
+
+        # imagedata = np.random.random((256, 256, 4))
+        # ii = pg.ImageItem(imagedata)
+
+        # self.table_viewbox.addItem(ii)
+
+
+        try:
+            self.table_image = Image.open("rc/table_2017.png", mode="r")
+            print(self.table_image.format, self.table_image.size, self.table_image.mode)
+
+            data = np.array(self.table_image)
+            self.table_img = pg.ImageItem(data)
+            self.table_viewbox.addItem(self.table_img)
+
+        except IOError:
+            print('Error: cannot open Table image file')
+
+    def setup_layout(self):
         layout_parameters = QVBoxLayout()
         layout_parameters.addWidget(self.graphics_parameter)
         self.widget_parameters.setLayout(layout_parameters)
@@ -213,56 +255,6 @@ class Graphics(Ui_Graphics):
 
         self.splitter.setStretchFactor(0, 1)
         self.splitter.setStretchFactor(1, 0)
-
-        # TEMP TESTS
-
-        # .setWidget(self.graphics_parameter)
-
-        # Dock Widget options
-        # self.setAllowedAreas(QtCore.Qt.NoDockWidgetArea)
-        # self.setWindowTitle("Graphics viewer")
-        # self.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
-        # self.setWidget(self.dock_area)
-
-        # self.graphicsView_graphics.setWidget(self.dock_area)
-        # self.graphicsView_parameters.setWidget(self.graphics_parameter)
-        # self.parameters_dock = Dock("Graphics Configuration",
-        #                             size=(100, 400),
-        #                             closable=False,)
-
-        # self.dock_area.addDock(self.parameters_dock, 'right')
-
-        # Parameters dock
-        # self.parameters_dock.addWidget(self.graphics_parameter)
-
-
-
-        # self.plot_widgets = list()
-
-        # Plot widget test
-        # new_plot_widget = pg.PlotWidget(title="This is a test")
-        #
-        # pen_act = pg.mkPen((0, 200, 0, 255), width=2)
-        # pen_des = pg.mkPen((200, 0, 0, 255), width=2)
-        # brush_fill = (100, 0, 100, 100)
-        #
-        # self.nb_points = 500
-        # self.step = 0.1
-        # self.cnt = 0
-        #
-        # self.x = np.arange(-self.nb_points * self.step, 0, self.step)
-        # self.y1 = np.zeros(self.nb_points)
-        # self.y2 = np.zeros(self.nb_points)
-        #
-        # self.plot1 = new_plot_widget.plot(x=self.x, y=self.y1, pen=pen_act)
-        # self.plot2 = new_plot_widget.plot(x=self.x, y=self.y2, pen=pen_des)
-        # self.fill = pg.FillBetweenItem(self.plot1, self.plot2, brush=brush_fill)
-        # new_plot_widget.addItem(self.fill)
-
-
-
-
-        # self.plot_widgets[0].clear()
 
     def add_plot_window(self, child, index):
         index.setup_dock(self.dock_area)
@@ -297,7 +289,7 @@ class Graphics(Ui_Graphics):
             plots = windows[i].children()
             for j in range(len(plots)):
                 if plots[j].value() == probe:
-                    plots[j].update_data(new_value)
+                    plots[j].add_data(time.time(), new_value)
 
     def append_value(self, new_value):
 
