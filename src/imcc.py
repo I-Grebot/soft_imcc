@@ -107,17 +107,22 @@ class IMCC(QMainWindow):
     @pyqtSlot()
     def cli_process(self):
 
-        try:
+        # try:
             item = self.cli.get_item()
             cmd_args = item.split("=")
 
-            args_val = cmd_args[1].split(":")
+            if len(cmd_args) == 2:
 
-            x = int(args_val[0])
-            y = int(args_val[1])
-            a = int(args_val[2])
+                args_val = cmd_args[1].split(":")
 
-            self.graphics_dock.append_value(x)
+                x = int(args_val[0])
+                y = int(args_val[1])
+                a = int(args_val[2])
 
-        except:
-            pass
+                # self.graphics_dock.append_value(x)
+                self.graphics.set_probe_value("robot.cs.pos.x", x)
+                self.graphics.set_probe_value("robot.cs.pos.y", y)
+                self.graphics.set_probe_value("robot.cs.pos.a", a)
+
+        # except:
+        #     pass
