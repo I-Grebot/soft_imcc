@@ -6,7 +6,7 @@ import colorsys
 # Qt Libraries
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QWidget, QDockWidget, QTabWidget, QHBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QWidget, QDockWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QMainWindow
 from PyQt5.QtCore import *
 
 # PyQtGraph
@@ -18,6 +18,8 @@ from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, reg
 
 # Numpy
 import numpy as np
+
+from ui.graphics import Ui_Graphics
 
 # A single plot configuration
 class PlotParameter(pTypes.GroupParameter):
@@ -161,7 +163,7 @@ class PlotsGroup(pTypes.GroupParameter):
         self.plots_changed.emit(child, index)
 
 
-class Graphics(QDockWidget):
+class Graphics(Ui_Graphics):
 
     params = [
         {'name': 'General Parameters', 'type': 'group', 'children': [
@@ -171,13 +173,16 @@ class Graphics(QDockWidget):
     ]
 
     def __init__(self):
-        super(Graphics, self).__init__()
+        self.win = QMainWindow()
+        self.setupUi(self.win)
+
+        # super(Graphics, self).__init__()
 
         # Set some PyQtGraph global options
         pg.setConfigOptions(antialias=True)
 
-        self.dock_area = DockArea(self)
-        self.graphics_parameter = ParameterTree()
+        self.dock_area = DockArea()
+        self.graphics_parameter = ParameterTree(showHeader=False)
 
         self.p = Parameter.create(name='params', type='group', children=self.params)
 
@@ -188,25 +193,39 @@ class Graphics(QDockWidget):
 
         self.graphics_parameter.setParameters(self.p, showTop=False)
 
-        # Dock Widget options
-        self.setAllowedAreas(QtCore.Qt.NoDockWidgetArea)
-        self.setWindowTitle("Graphics viewer")
-        self.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        layout_parameters = QVBoxLayout()
+        layout_parameters.addWidget(self.graphics_parameter)
+        self.widget_parameters.setLayout(layout_parameters)
 
+        layout_graphics = QVBoxLayout()
+        layout_graphics.addWidget(self.dock_area)
+        self.widget_graphics.setLayout(layout_graphics)
 
-        self.setWidget(self.dock_area)
-
-        self.parameters_dock = Dock("Graphics Configuration",
-                                    size=(100, 400),
-                                    closable=False,)
-
-        self.dock_area.addDock(self.parameters_dock, 'right')
-
-        # Parameters dock
-        self.parameters_dock.addWidget(self.graphics_parameter)
-
+        self.splitter.setStretchFactor(0, 1)
+        self.splitter.setStretchFactor(1, 0)
 
         # TEMP TESTS
+
+        # .setWidget(self.graphics_parameter)
+
+        # Dock Widget options
+        # self.setAllowedAreas(QtCore.Qt.NoDockWidgetArea)
+        # self.setWindowTitle("Graphics viewer")
+        # self.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+        # self.setWidget(self.dock_area)
+
+        # self.graphicsView_graphics.setWidget(self.dock_area)
+        # self.graphicsView_parameters.setWidget(self.graphics_parameter)
+        # self.parameters_dock = Dock("Graphics Configuration",
+        #                             size=(100, 400),
+        #                             closable=False,)
+
+        # self.dock_area.addDock(self.parameters_dock, 'right')
+
+        # Parameters dock
+        # self.parameters_dock.addWidget(self.graphics_parameter)
+
+
 
         # self.plot_widgets = list()
 

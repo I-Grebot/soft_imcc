@@ -69,9 +69,8 @@ class IMCC(QMainWindow):
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
 
         # Create and place the main central widget
-        # self.center_dock = QDockWidget()
-        self.graphics_dock = Graphics()
-        self.setCentralWidget(self.graphics_dock)
+        self.graphics = Graphics()
+        self.setCentralWidget(self.graphics.win)
 
     def connect(self):
         self.ui.actionConnect.triggered[bool].connect(self.action_connect)
