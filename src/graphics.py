@@ -186,7 +186,6 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
     # Attributes
     playground_size_px = tuple()
-    outline_pen = QtGui.QPen()
 
     def __init__(self):
         super(TableViewWidget, self).__init__()
@@ -219,9 +218,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.draw_robot()
         self.draw_target()
 
-        self.add_robot_pos(0, 0, 0)
+        self.add_robot_pos(0, 0, 90)
         self.update_target_pos(1500, 1000)
-
 
     def draw_playground(self):
         try:
@@ -250,8 +248,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         x = [orig[0], orig[0]+size[0], orig[0]+size[0], orig[0], orig[0]]
         y = [orig[1], orig[1], orig[1]+size[1], orig[1]+size[1], orig[1]]
 
-        self.outline_pen = pg.mkPen(color='k', width=2)
-        self.outline_plot = self.plot_widget.plot(pen=self.outline_pen, pxMode=False, name="Outline",
+        self.outline_plot = self.plot_widget.plot(pen=pg.mkPen(color='k', width=2),
+                                                  pxMode=False, name="Outline",
                                                   x=x, y=y)
 
         self.viewbox.addItem(self.outline_plot)
@@ -266,11 +264,21 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.viewbox.addItem(self.robot_pos_plot)
 
         # Plot for the positions history
-        self.robot_pos_hist_plot = self.plot_widget.plot(pen=pg.mkPen(color=(0, 0, 200, 255), width=5),
+        self.robot_pos_hist_plot = self.plot_widget.plot(pen=pg.mkPen(color=(0, 0, 200, 200), width=5),
                                                          symbol=None,
                                                          pxMode=True,
                                                          name='Robot position history')
         self.viewbox.addItem(self.robot_pos_hist_plot)
+
+        # Plot arrow for the current orientation (angle)
+        self.robot_angle_arrow = pg.ArrowItem(angle=180, # Required so it points outwards
+                                              pen=(200, 200, 200, 255),
+                                              brush=(0, 0, 200, 210),
+                                              tipAngle=30, baseAngle=-30,
+                                              headLen=self.robot_radius/2,
+                                              tailLen=None,
+                                              pxMode=False)
+        self.viewbox.addItem(self.robot_angle_arrow)
 
     def draw_target(self):
         self.target_pos_plot = self.plot_widget.plot(pen=None,
@@ -285,9 +293,20 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         y = [item['y'] for item in self.robot_pos]
         a = [item['a'] for item in self.robot_pos]
 
+        last_x = x[len(x)-1]
+        last_y = y[len(y)-1]
+        last_a = a[len(a)-1]
+
         # Plot the current location (big plot) with the latest entry
-        self.robot_pos_plot.setData(x=[x[len(x)-1]], y=[y[len(y)-1]])
+        self.robot_pos_plot.setData(x=[last_x], y=[last_y])
+
+        # Plot the history location
         self.robot_pos_hist_plot.setData(x=x, y=y)
+
+        # Plot the arrow displaying the current orientation
+        self.robot_angle_arrow.setPos(QPoint(last_x + self.robot_radius/2*np.cos(np.radians(last_a)),
+                                             last_y + self.robot_radius/2*np.sin(np.radians(last_a))))
+        self.robot_angle_arrow.setRotation(last_a) # Bug in the setStyle of ArrowItem() class
 
     def update_target_pos(self, x, y):
         self.target_pos_plot.setData(x=[x], y=[y])
