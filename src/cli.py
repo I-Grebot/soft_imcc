@@ -105,7 +105,7 @@ class Cli(QObject):
     # end read
 
     def process_read(self, data):
-        data_str = data.decode()
+        data_str = data.decode('utf-8','ignore')
         clean_str = data_str.strip("/\r")
         #print(clean_str, end="")
 

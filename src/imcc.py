@@ -124,5 +124,7 @@ class IMCC(QMainWindow):
                 self.graphics.set_probe_value("robot.cs.pos.y", y)
                 self.graphics.set_probe_value("robot.cs.pos.a", a)
 
+                self.graphics.table.add_robot_pos(x, y, a)
+
         # except:
         #     pass

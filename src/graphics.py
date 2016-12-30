@@ -179,6 +179,119 @@ class PlotsGroup(pTypes.GroupParameter):
     def add_plot(self, child, index):
         self.plots_changed.emit(child, index)
 
+class TableViewWidget(pg.GraphicsLayoutWidget):
+
+    # Constants
+    ROBOT_POS_BUFFER_SIZE = 200
+
+    # Attributes
+    playground_size_px = tuple()
+    outline_pen = QtGui.QPen()
+
+    def __init__(self):
+        super(TableViewWidget, self).__init__()
+
+        # Define general settings and the main viewbox
+        self.setBackground('w')
+        self.viewbox = self.addViewBox(row=2, col=1)
+        self.viewbox.setAspectLocked(True)
+
+        # Playground image
+        self.playground_img = pg.ImageItem()
+
+        # Plot Widget for overlayed markings
+        self.plot_widget = pg.PlotWidget()
+
+        # Constants from rules
+        self.playground_size_mm = [3000, 2000]
+
+        # Constants from image
+        self.playground_origin_coord_px = QPoint(-40, -40)
+        self.px_to_mm = 3000 / 1146
+
+        # Parameters/Variables
+        self.robot_radius = 300
+        self.robot_pos = deque(maxlen=self.ROBOT_POS_BUFFER_SIZE)
+
+        # Draw all table view items
+        self.draw_playground()
+        self.draw_table_outline()
+        self.draw_robot()
+        self.draw_target()
+
+        self.add_robot_pos(0, 0, 0)
+        self.update_target_pos(1500, 1000)
+
+
+    def draw_playground(self):
+        try:
+            self.playground_img = Image.open("rc/table_2017.png", mode="r")
+            playground_img_data = pg.ImageItem(view=pg.PlotItem)
+
+            playground_img_data.setImage(np.array(self.playground_img), opacity=1.0)
+            playground_img_data.setScale(self.px_to_mm)
+            playground_img_data.setPos(self.playground_origin_coord_px * self.px_to_mm)
+
+            self.viewbox.addItem(playground_img_data)
+
+            self.image_size_px = self.playground_img.size
+            self.plot_widget.setXRange(0, self.playground_size_mm[0], 0)
+            self.plot_widget.setYRange(0, self.playground_size_mm[1], 0)
+
+        except IOError:
+            print('Error: cannot open Table image file')
+
+    def draw_table_outline(self):
+
+        orig = [0, 0]
+        size = self.playground_size_mm
+
+        # Table boundaries
+        x = [orig[0], orig[0]+size[0], orig[0]+size[0], orig[0], orig[0]]
+        y = [orig[1], orig[1], orig[1]+size[1], orig[1]+size[1], orig[1]]
+
+        self.outline_pen = pg.mkPen(color='k', width=2)
+        self.outline_plot = self.plot_widget.plot(pen=self.outline_pen, pxMode=False, name="Outline",
+                                                  x=x, y=y)
+
+        self.viewbox.addItem(self.outline_plot)
+
+    def draw_robot(self):
+
+        # Plot for the current position
+        self.robot_pos_plot = self.plot_widget.plot(pen=None,
+                                                    symbol='o', symbolPen=None, symbolSize=self.robot_radius, pxMode=False,
+                                                    symbolBrush=(0, 0, 200, 150),
+                                                    name='Robot position')
+        self.viewbox.addItem(self.robot_pos_plot)
+
+        # Plot for the positions history
+        self.robot_pos_hist_plot = self.plot_widget.plot(pen=pg.mkPen(color=(0, 0, 200, 255), width=5),
+                                                         symbol=None,
+                                                         pxMode=True,
+                                                         name='Robot position history')
+        self.viewbox.addItem(self.robot_pos_hist_plot)
+
+    def draw_target(self):
+        self.target_pos_plot = self.plot_widget.plot(pen=None,
+                                                     symbol='+', symbolPen=None, symbolSize=100, pxMode=False,
+                                                     symbolBrush=(200, 0, 0, 220),
+                                                     name='Target position')
+        self.viewbox.addItem(self.target_pos_plot)
+
+    def add_robot_pos(self, x, y, a):
+        self.robot_pos.append({'x': x, 'y': y, 'a': a})
+        x = [item['x'] for item in self.robot_pos]
+        y = [item['y'] for item in self.robot_pos]
+        a = [item['a'] for item in self.robot_pos]
+
+        # Plot the current location (big plot) with the latest entry
+        self.robot_pos_plot.setData(x=[x[len(x)-1]], y=[y[len(y)-1]])
+        self.robot_pos_hist_plot.setData(x=x, y=y)
+
+    def update_target_pos(self, x, y):
+        self.target_pos_plot.setData(x=[x], y=[y])
+
 class Graphics(Ui_Graphics):
 
     params = [
@@ -218,31 +331,9 @@ class Graphics(Ui_Graphics):
         self.dock_table = Dock("Table View", closable=False, autoOrientation=False)
         self.dock_area.addDock(self.dock_table, 'top')
 
-        self.table_widget = pg.GraphicsLayoutWidget()
-        self.table_widget.setBackground('w')
-        self.table_viewbox = self.table_widget.addViewBox(row=1, col=1)
-        self.table_img = pg.ImageItem()
-        self.table_viewbox.addItem(self.table_img)
-        self.table_viewbox.setAspectLocked(True)
+        self.table = TableViewWidget()
+        self.dock_table.addWidget(self.table)
 
-        self.dock_table.addWidget(self.table_widget)
-
-        # imagedata = np.random.random((256, 256, 4))
-        # ii = pg.ImageItem(imagedata)
-
-        # self.table_viewbox.addItem(ii)
-
-
-        try:
-            self.table_image = Image.open("rc/table_2017.png", mode="r")
-            print(self.table_image.format, self.table_image.size, self.table_image.mode)
-
-            data = np.array(self.table_image)
-            self.table_img = pg.ImageItem(data)
-            self.table_viewbox.addItem(self.table_img)
-
-        except IOError:
-            print('Error: cannot open Table image file')
 
     def setup_layout(self):
         layout_parameters = QVBoxLayout()
