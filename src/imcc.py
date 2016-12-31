@@ -21,8 +21,7 @@ from console import Console
 from configuration import Configuration
 from parameters import Parameters
 from cli import Cli
-from graphics import Graphics
-
+from graphics.graphics import Graphics
 
 class IMCC(QMainWindow):
 
