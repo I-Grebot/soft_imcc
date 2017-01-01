@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import os
 from PyQt5.QtWidgets import QVBoxLayout, QMainWindow
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from .tableviewwidget import *
@@ -18,7 +19,7 @@ class Graphics(Ui_Graphics):
         {'name': 'Table View', 'type': 'group', 'children': [
             {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
             {'name': 'Playground Image', 'type': 'group', 'children': [
-                {'name': 'File', 'type': 'str', 'value': 'rc/table_2017.png'},
+                {'name': 'File', 'type': 'str', 'value': os.path.dirname(__file__) + '/../rc/table_2017.png'},
                 {'name': 'Origin Coord. X', 'type': 'int', 'value': -40},
                 {'name': 'Origin Coord. Y', 'type': 'int', 'value': -40},
                 {'name': 'Scaling Factor', 'type': 'float', 'value': 3000/1146, 'decimals': 4, 'suffix': 'px/mm'},

@@ -62,7 +62,7 @@ class Cli(QObject):
         self.send('sys reset\n')
         time.sleep(1)
 
-        #self.probe_start()
+        self.probe_start()
         return True
     # end open
 
@@ -71,7 +71,7 @@ class Cli(QObject):
             self.alive.clear()
             self.state.notify()
 
-            #self.probe_stop()
+            self.probe_stop()
         self.serial.close()  # Close the serial port
 
         print('[CLI] Closed CLI')
@@ -122,17 +122,17 @@ class Cli(QObject):
 
 
     def probe_start(self):
+        print('Starting probe...')
         self.timer = QTimer()
         self.timer.timeout.connect(self.probe_send_test)
 
         #self.send('set sys.shell.echo 0\n')
 
-        self.timer.start(1000)
+        self.timer.start(100)
 
     def probe_stop(self):
         self.timer.stop()
         #self.send('set sys.shell.echo 1\n')
 
     def probe_send_test(self):
-        #self.send('get robot.cs.pos\n')
-        self.send('sys tasks\n')
+        self.send('get robot.cs.pos\n')

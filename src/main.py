@@ -10,6 +10,7 @@ from console import ConsoleStream, ConsoleReceiver
 
 if __name__ == '__main__':
 
+
     # Create application and initialize all windows
     app = QApplication(sys.argv)
     imcc = IMCC()
