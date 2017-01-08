@@ -3,11 +3,11 @@
 
 from ui.variables import Ui_Variables
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QTableWidgetItem, QHeaderView
 
-class Variables(Ui_Variables):
+class Variables(QObject, Ui_Variables):
 
     # -------------------------------------------------------------------------
     # Constants
@@ -20,9 +20,16 @@ class Variables(Ui_Variables):
     COLUMN_PROBE    = 5
 
     # -------------------------------------------------------------------------
+    # Attributes
+    # -------------------------------------------------------------------------
+    # Signals factory
+    probe_list_changed = pyqtSignal(name='probeListChanged')
+
+    # -------------------------------------------------------------------------
     # Constructor
     # -------------------------------------------------------------------------
     def __init__(self, dockwidget, cli):
+        super(Variables, self).__init__()
         self.cli = cli
         self.setupUi(dockwidget)
         self.clear_table()
@@ -105,17 +112,25 @@ class Variables(Ui_Variables):
         item_probe.setCheckState(Qt.Unchecked)
         self.tableWidget_variables.setItem(row, self.COLUMN_PROBE, item_probe)
 
+    def get_probe_list(self):
+
+        probe_list = list()
+
+        for i in range(self.tableWidget_variables.rowCount()):
+            if self.tableWidget_variables.item(i, self.COLUMN_PROBE).checkState() == Qt.Checked:
+                name = self.tableWidget_variables.item(i, self.COLUMN_NAME).text()
+                probe_list.append(name)
+
+        return probe_list
+
     # -------------------------------------------------------------------------
     # Slots & Binds
     # -------------------------------------------------------------------------
 
     def table_item_clicked(self, item):
-        print('"%s" in Clicked' % item.text())
-        # print('Loc:', item.row(), ':', item.column())
 
         if item.column() == self.COLUMN_PROBE:
-            print('Updating probe list...')
-            print('Checked: ', (item.checkState() == Qt.Checked))
+            self.probe_list_changed.emit()
 
 
 

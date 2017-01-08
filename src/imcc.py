@@ -48,6 +48,7 @@ class IMCC(QMainWindow):
         self.ui.action_viewBootload.trigger() # Hidden
 
         # Variables for probe
+        self.probe_list = list()
         self.probe_started = False
         self.timer = QTimer()
 
@@ -104,6 +105,8 @@ class IMCC(QMainWindow):
         self.graphics.actionReset.triggered[bool].connect(self.reset)
         self.graphics.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
+        self.variables.probe_list_changed.connect(self.probe_list_update)
+
 
     # -------------------------------------------------------------------------
     # Bind & Slots connection
@@ -131,22 +134,33 @@ class IMCC(QMainWindow):
 
         if self.probe_started:
             try:
-                cmd_args = ret_str.split("=")
+                if ret_str.startswith('[GET]'):
 
-                if len(cmd_args) == 2:
+                    # Clean the string
+                    ret_str = ret_str[5:]
+                    ret_str = re.sub('\s+', ' ', ret_str)
+                    ret_str = re.sub('\A\s', '', ret_str)
+                    ret_str = re.sub('\s\Z', '', ret_str)
+                    ret_str = re.sub('[^a-zA-Z0-9=_. ]+', '', ret_str)
 
-                    args_val = cmd_args[1].split(":")
+                    cmd_args = ret_str.split("=")
 
-                    x = int(args_val[0])
-                    y = int(args_val[1])
-                    a = int(args_val[2])
+                    if len(cmd_args) == 2:
+                        self.graphics.set_probe_value(cmd_args[0], int(cmd_args[1]))
 
-                    # self.graphics_dock.append_value(x)
-                    self.graphics.set_probe_value("robot.cs.pos.x", x)
-                    self.graphics.set_probe_value("robot.cs.pos.y", y)
-                    self.graphics.set_probe_value("robot.cs.pos.a", a)
+                        # args_val = cmd_args[1].split(":")
+                        #
+                        # x = int(args_val[0])
+                        # y = int(args_val[1])
+                        # a = int(args_val[2])
+                        #
+                        # # self.graphics_dock.append_value(x)
+                        # self.graphics.set_probe_value("robot.cs.pos.x", x)
+                        # self.graphics.set_probe_value("robot.cs.pos.y", y)
+                        # self.graphics.set_probe_value("robot.cs.pos.a", a)
+                        #
+                        # self.graphics.table.add_robot_pos(x, y, a)
 
-                    self.graphics.table.add_robot_pos(x, y, a)
 
             except:
                 pass
@@ -179,13 +193,19 @@ class IMCC(QMainWindow):
         self.cli.flush()
         self.cli.send('sys reset\n')
 
+    def probe_list_update(self):
+        self.probe_list = self.variables.get_probe_list()
+        self.graphics.set_probe_list(self.probe_list)
+
+        print(self.probe_list)
+
     def probe_start_stop(self, state):
 
         if state:
             print('Starting probe...')
             self.cli.flush()
             self.timer.timeout.connect(self.probe_send_test)
-            self.timer.start(500)
+            self.timer.start(100)
             self.probe_started = True
         else:
             print('Stopping probe...')
@@ -193,5 +213,6 @@ class IMCC(QMainWindow):
             self.timer.stop()
 
     def probe_send_test(self):
-        print('sending...')
-        self.cli.send('get robot.cs.pos\n')
+        for i in range(len(self.probe_list)):
+            self.cli.send('get %s\n' % self.probe_list[i])
+

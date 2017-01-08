@@ -86,7 +86,7 @@ class PlotWindowParameter(pTypes.GroupParameter):
     def __init__(self, **opts):
         opts['type'] = 'group'
         opts['addText'] = "Add Plot"
-        opts['addList'] = ['robot.cs.pos.x', 'robot.cs.pos.y', 'robot.cs.pos.a']
+        opts['addList'] = []
 
         pTypes.GroupParameter.__init__(self, **opts)
         self.addChild({'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"})
@@ -114,6 +114,9 @@ class PlotWindowParameter(pTypes.GroupParameter):
         new_kid.param('Color').setValue(self.COLORS[nb_plots % len(self.COLORS)])
         new_kid.setup_plot(self.plot_widget)
 
+    def set_probe_list(self, probe_list):
+        self.setAddList(probe_list)
+
     def get_dock(self):
         return self.dock
 
@@ -135,6 +138,7 @@ class PlotsGroup(pTypes.GroupParameter):
     def __init__(self, **opts):
         opts['addText'] = "Add Window"
         pTypes.GroupParameter.__init__(self, **opts)
+        self.probe_list = list()
 
     def addNew(self):
         new_kid = self.addChild(
@@ -142,7 +146,11 @@ class PlotsGroup(pTypes.GroupParameter):
                                 removable=True,
                                 renamable=True),
             autoIncrementName=True)
+        new_kid.set_probe_list(self.probe_list)
         new_kid.sigChildAdded.connect(self.add_plot)
 
     def add_plot(self, child, index):
         self.plots_changed.emit(child, index)
+
+    def set_probe_list(self, probe_list):
+        self.probe_list = probe_list
