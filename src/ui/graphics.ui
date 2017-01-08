@@ -32,6 +32,9 @@
     </property>
     <item>
      <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
       <widget class="QWidget" name="widget_graphics" native="true"/>
       <widget class="QWidget" name="widget_parameters" native="true"/>
      </widget>
@@ -48,11 +51,20 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionTest"/>
+   <addaction name="actionReset"/>
+   <addaction name="actionProbe"/>
   </widget>
-  <action name="actionTest">
+  <action name="actionProbe">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>test</string>
+    <string>Probe</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
    </property>
   </action>
  </widget>

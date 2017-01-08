@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+import sys
+import time
+import re
+
 # Qt Libraries
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -20,6 +24,7 @@ from stm32flash import Stm32Flash
 from console import Console
 from configuration import Configuration
 from parameters import Parameters
+from variables import Variables
 from cli import Cli
 from graphics.graphics import Graphics
 
@@ -39,6 +44,12 @@ class IMCC(QMainWindow):
 
         self.connect()
 
+        # Default states
+        self.ui.action_viewBootload.trigger() # Hidden
+
+        # Variables for probe
+        self.probe_started = False
+        self.timer = QTimer()
 
     def create_widgets(self):
 
@@ -67,6 +78,12 @@ class IMCC(QMainWindow):
         self.parameters_dock.setWindowTitle("Parameters")
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
 
+        # Add the Variables dock
+        self.variables_dock = QDockWidget()
+        self.variables_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        self.variables = Variables(self.variables_dock, self.cli)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.variables_dock)
+
         # Create and place the main central widget
         self.graphics = Graphics()
         self.setCentralWidget(self.graphics.win)
@@ -83,6 +100,10 @@ class IMCC(QMainWindow):
         self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.action_viewBootload.setChecked)
 
         self.cli.data_available.connect(self.cli_process)
+
+        self.graphics.actionReset.triggered[bool].connect(self.reset)
+        self.graphics.actionProbe.triggered[bool].connect(self.probe_start_stop)
+
 
     # -------------------------------------------------------------------------
     # Bind & Slots connection
@@ -106,24 +127,71 @@ class IMCC(QMainWindow):
     @pyqtSlot()
     def cli_process(self):
 
-        # try:
-            item = self.cli.get_item()
-            cmd_args = item.split("=")
+        ret_str = self.cli.get_item()
 
-            if len(cmd_args) == 2:
+        if self.probe_started:
+            try:
+                cmd_args = ret_str.split("=")
 
-                args_val = cmd_args[1].split(":")
+                if len(cmd_args) == 2:
 
-                x = int(args_val[0])
-                y = int(args_val[1])
-                a = int(args_val[2])
+                    args_val = cmd_args[1].split(":")
 
-                # self.graphics_dock.append_value(x)
-                self.graphics.set_probe_value("robot.cs.pos.x", x)
-                self.graphics.set_probe_value("robot.cs.pos.y", y)
-                self.graphics.set_probe_value("robot.cs.pos.a", a)
+                    x = int(args_val[0])
+                    y = int(args_val[1])
+                    a = int(args_val[2])
 
-                self.graphics.table.add_robot_pos(x, y, a)
+                    # self.graphics_dock.append_value(x)
+                    self.graphics.set_probe_value("robot.cs.pos.x", x)
+                    self.graphics.set_probe_value("robot.cs.pos.y", y)
+                    self.graphics.set_probe_value("robot.cs.pos.a", a)
 
-        # except:
-        #     pass
+                    self.graphics.table.add_robot_pos(x, y, a)
+
+            except:
+                pass
+
+        else:
+            self.console.append_text(ret_str)
+
+            # Decode returned strings
+            if ret_str.startswith('[VAR]'):
+
+                # Clean the string
+                ret_str = ret_str[5:]
+                ret_str = re.sub('\s+', ' ',     ret_str)
+                ret_str = re.sub('\A\s', '', ret_str)
+                ret_str = re.sub('\s\Z', '', ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9_. ]+', '', ret_str)
+
+                # Split items, add it to the variable list if it matches the format
+                var_items = ret_str.split(' ')
+                if len(var_items) == 6:
+                    var = {'id': var_items[0],
+                           'name': var_items[3],
+                           'type': var_items[1],
+                           'access': var_items[2],
+                           'value': var_items[5],
+                           'unit': var_items[4]}
+                    self.variables.add_item(var)
+
+    def reset(self):
+        self.cli.flush()
+        self.cli.send('sys reset\n')
+
+    def probe_start_stop(self, state):
+
+        if state:
+            print('Starting probe...')
+            self.cli.flush()
+            self.timer.timeout.connect(self.probe_send_test)
+            self.timer.start(500)
+            self.probe_started = True
+        else:
+            print('Stopping probe...')
+            self.probe_started = False
+            self.timer.stop()
+
+    def probe_send_test(self):
+        print('sending...')
+        self.cli.send('get robot.cs.pos\n')

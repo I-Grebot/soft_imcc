@@ -19,6 +19,7 @@ class Ui_Graphics(object):
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setObjectName("verticalLayout")
         self.splitter = QtWidgets.QSplitter(self.centralwidget)
+        self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.widget_graphics = QtWidgets.QWidget(self.splitter)
         self.widget_graphics.setObjectName("widget_graphics")
@@ -29,9 +30,13 @@ class Ui_Graphics(object):
         self.toolBar = QtWidgets.QToolBar(Graphics)
         self.toolBar.setObjectName("toolBar")
         Graphics.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
-        self.actionTest = QtWidgets.QAction(Graphics)
-        self.actionTest.setObjectName("actionTest")
-        self.toolBar.addAction(self.actionTest)
+        self.actionProbe = QtWidgets.QAction(Graphics)
+        self.actionProbe.setCheckable(True)
+        self.actionProbe.setObjectName("actionProbe")
+        self.actionReset = QtWidgets.QAction(Graphics)
+        self.actionReset.setObjectName("actionReset")
+        self.toolBar.addAction(self.actionReset)
+        self.toolBar.addAction(self.actionProbe)
 
         self.retranslateUi(Graphics)
         QtCore.QMetaObject.connectSlotsByName(Graphics)
@@ -40,5 +45,6 @@ class Ui_Graphics(object):
         _translate = QtCore.QCoreApplication.translate
         Graphics.setWindowTitle(_translate("Graphics", "graphics"))
         self.toolBar.setWindowTitle(_translate("Graphics", "toolBar"))
-        self.actionTest.setText(_translate("Graphics", "test"))
+        self.actionProbe.setText(_translate("Graphics", "Probe"))
+        self.actionReset.setText(_translate("Graphics", "Reset"))
 
