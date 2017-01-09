@@ -141,13 +141,14 @@ class IMCC(QMainWindow):
                     ret_str = re.sub('\s+', ' ', ret_str)
                     ret_str = re.sub('\A\s', '', ret_str)
                     ret_str = re.sub('\s\Z', '', ret_str)
-                    ret_str = re.sub('[^a-zA-Z0-9=_. ]+', '', ret_str)
+                    ret_str = re.sub('[^a-zA-Z0-9=_\-. ]+', '', ret_str)
 
                     cmd_args = ret_str.split("=")
 
                     if len(cmd_args) == 2:
                         self.graphics.set_probe_value(cmd_args[0], int(cmd_args[1]))
 
+                        # TODO: move robot(x,y,a) into dedicated holder
                         # args_val = cmd_args[1].split(":")
                         #
                         # x = int(args_val[0])
@@ -161,6 +162,20 @@ class IMCC(QMainWindow):
                         #
                         # self.graphics.table.add_robot_pos(x, y, a)
 
+                if ret_str.startswith('[PRB]'):
+
+                    # Clean the string
+                    ret_str = ret_str[5:]
+                    ret_str = re.sub('\s+', ' ', ret_str)
+                    ret_str = re.sub('\A\s', '', ret_str)
+                    ret_str = re.sub('\s\Z', '', ret_str)
+                    ret_str = re.sub('[^0-9\-. ]+', '', ret_str)
+
+                    values = ret_str.split(" ")
+
+                    if len(values) == len(self.probe_list):
+                        for i in range(len(values)):
+                            self.graphics.set_probe_value(self.probe_list[i]['name'], int(values[i]))
 
             except:
                 pass
@@ -213,6 +228,14 @@ class IMCC(QMainWindow):
             self.timer.stop()
 
     def probe_send_test(self):
+        probe_str = 'prb '
         for i in range(len(self.probe_list)):
-            self.cli.send('get %s\n' % self.probe_list[i])
+            probe_str += '%s ' % self.probe_list[i]['id']
+
+        probe_str += '\n'
+        self.cli.send(probe_str)
+
+        # Old-school with 'get'
+        # for i in range(len(self.probe_list)):
+        #     self.cli.send('get %s\n' % self.probe_list[i])
 

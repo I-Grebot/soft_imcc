@@ -115,7 +115,11 @@ class PlotWindowParameter(pTypes.GroupParameter):
         new_kid.setup_plot(self.plot_widget)
 
     def set_probe_list(self, probe_list):
-        self.setAddList(probe_list)
+        probe_list_str = list()
+        for k in range(len(probe_list)):
+            probe_list_str.append(probe_list[k]['name'])
+
+        self.setAddList(probe_list_str)
 
     def get_dock(self):
         return self.dock

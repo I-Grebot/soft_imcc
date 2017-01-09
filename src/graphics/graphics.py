@@ -44,7 +44,7 @@ class Graphics(Ui_Graphics):
         self.graphics_parameter.setParameters(self.p, showTop=False)
 
         # Setup other stuffs
-        self.probe_list = ['robot.cs.pos.x', 'robot.cs.pos.y', 'robot.cs.pos.a'] # Default for test
+        self.probe_list = list()
         self.setup_table_view()
         self.setup_layout()
 
@@ -126,18 +126,15 @@ class Graphics(Ui_Graphics):
             for j in range(len(plots)):
                 if plots[j].name().startswith('Plot '):
                     probe_set.add(plots[j].value())
-        print(*probe_set)
+        # print(*probe_set)
         return probe_set
 
     def set_probe_list(self, probe_list):
-
         self.probe_list = probe_list
-
         windows = self.p.param('Plots').children()
         self.p.param('Plots').set_probe_list(self.probe_list)
 
         for i in range(len(windows)):
-            print('Def probe list for ', windows[i].name())
             windows[i].set_probe_list(self.probe_list)
 
 
