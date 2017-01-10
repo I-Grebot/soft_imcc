@@ -34,6 +34,6 @@ if __name__ == '__main__':
     imcc.set_status_bar_message('Initialized')
 
     # Show everything and run the app!
-    imcc.show()
+    imcc.showMaximized()
 
     sys.exit(app.exec_())

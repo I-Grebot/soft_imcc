@@ -42,26 +42,6 @@ class Variables(QObject, Ui_Variables):
         self.tableWidget_variables.itemClicked.connect(self.table_item_clicked)
         self.pushButton_refresh.clicked.connect(self.refresh_table)
 
-        # Tests
-
-        test_item = {'id': "0",
-                     'name': "robot.cs.pos.x",
-                     'type': "int16",
-                     'access': "RD",
-                     'value': "42",
-                     'unit': "mm"}
-
-        test_item2 = {'id': "1",
-                     'name': "robot.cs.pos.y",
-                     'type': "int16",
-                     'access': "RD",
-                     'value': "57",
-                     'unit': "mm"}
-
-
-        self.add_item(test_item)
-        self.add_item(test_item2)
-
     # -------------------------------------------------------------------------
     # Handlers
     # -------------------------------------------------------------------------

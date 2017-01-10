@@ -37,7 +37,7 @@ class IMCC(QMainWindow):
 
         self.center_dock_layout = None
 
-        self.parameters = Parameters()
+        self.parameters = Parameters(showHeader=False)
         self.cli = Cli()
 
         self.create_widgets()
@@ -181,17 +181,21 @@ class IMCC(QMainWindow):
                 pass
 
         else:
-            self.console.append_text(ret_str)
 
             # Decode returned strings
             if ret_str.startswith('[VAR]'):
+
+                # Display, it is not spammed on screen and would look odd with the header only
+                # TODO: remove echo mode from target, put instead interactive mode which does not echo nor
+                # display headers
+                self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[5:]
                 ret_str = re.sub('\s+', ' ',     ret_str)
                 ret_str = re.sub('\A\s', '', ret_str)
                 ret_str = re.sub('\s\Z', '', ret_str)
-                ret_str = re.sub('[^a-zA-Z0-9_. ]+', '', ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9_./ ]+', '', ret_str)
 
                 # Split items, add it to the variable list if it matches the format
                 var_items = ret_str.split(' ')
@@ -204,6 +208,10 @@ class IMCC(QMainWindow):
                            'unit': var_items[4]}
                     self.variables.add_item(var)
 
+            # Default: print string
+            else:
+                self.console.append_text(ret_str)
+
     def reset(self):
         self.cli.flush()
         self.cli.send('sys reset\n')
@@ -211,8 +219,6 @@ class IMCC(QMainWindow):
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()
         self.graphics.set_probe_list(self.probe_list)
-
-        print(self.probe_list)
 
     def probe_start_stop(self, state):
 
