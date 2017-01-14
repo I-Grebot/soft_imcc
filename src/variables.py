@@ -99,7 +99,8 @@ class Variables(QObject, Ui_Variables):
         for i in range(self.tableWidget_variables.rowCount()):
             if self.tableWidget_variables.item(i, self.COLUMN_PROBE).checkState() == Qt.Checked:
                 name = self.tableWidget_variables.item(i, self.COLUMN_NAME).text()
-                probe_list.append({'id': i, 'name': name})
+                probe_id = int(self.tableWidget_variables.verticalHeaderItem(i).text())
+                probe_list.append({'id': probe_id, 'name': name})
 
         return probe_list
 

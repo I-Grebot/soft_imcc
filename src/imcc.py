@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
-import time
+# Standard python libraries
 import re
 
 # Qt Libraries
@@ -22,10 +21,10 @@ from ui.imcc import Ui_imcc
 # Other modules dependencies
 from stm32flash import Stm32Flash
 from console import Console
-from configuration import Configuration
 from parameters import Parameters
 from variables import Variables
 from cli import Cli
+from robot import Robot
 from graphics.graphics import Graphics
 
 class IMCC(QMainWindow):
@@ -40,6 +39,8 @@ class IMCC(QMainWindow):
         self.parameters = Parameters(showHeader=False)
         self.cli = Cli()
 
+        self.robot = Robot()
+
         self.create_widgets()
 
         self.connect()
@@ -52,11 +53,11 @@ class IMCC(QMainWindow):
         self.probe_started = False
         self.timer = QTimer()
 
-    def create_widgets(self):
+    # -------------------------------------------------------------------------
+    # UI
+    # -------------------------------------------------------------------------
 
-        # Adding the Configuration widget
-        self.configuration_widget = QTabWidget()
-        self.configuration = Configuration(self.configuration_widget)
+    def create_widgets(self):
 
         # Adding the STm32Flash widget
         self.stm32flash_dock = QDockWidget()
@@ -90,9 +91,7 @@ class IMCC(QMainWindow):
         self.setCentralWidget(self.graphics.win)
 
     def connect(self):
-        self.ui.actionConnect.triggered[bool].connect(self.action_connect)
-
-        self.ui.action_openConfiguration.triggered.connect(self.configuration_widget.show)
+        self.ui.actionConnect.triggered[bool].connect(self.connect_com)
 
         self.ui.action_viewConsole.triggered[bool].connect(self.console_dock.setVisible)
         self.console_dock.visibilityChanged[bool].connect(self.ui.action_viewConsole.setChecked)
@@ -107,23 +106,62 @@ class IMCC(QMainWindow):
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
 
-
-    # -------------------------------------------------------------------------
-    # Bind & Slots connection
-    # -------------------------------------------------------------------------
-    @pyqtSlot(str)
     def set_status_bar_message(self, str):
         self.ui.statusbar.showMessage(str)
 
-    @pyqtSlot(str)
     def append_console(self, str):
         self.console.append_text(str)
 
+    # -------------------------------------------------------------------------
+    # Static methods
+    # -------------------------------------------------------------------------
+
+    @staticmethod
+    def cleanup_spaces(in_str):
+        ret_str = re.sub('\s+', ' ', in_str)
+        ret_str = re.sub('\A\s', '', ret_str)
+        ret_str = re.sub('\s\Z', '', ret_str)
+        return ret_str
+
+    # -------------------------------------------------------------------------
+    # Main Actions management
+    # -------------------------------------------------------------------------
+
+    def reset(self):
+        self.cli.flush()
+        self.cli.send('sys reset\n')
+
+    def probe_list_update(self):
+        self.probe_list = self.variables.get_probe_list()
+        self.graphics.set_probe_list(self.probe_list)
+
+    def probe_start_stop(self, state):
+
+        if state:
+            print('Starting probe...')
+            self.cli.flush()
+            self.timer.timeout.connect(self.probe_send)
+            self.timer.start(1000 / self.parameters.get_probing_frequency())
+            self.probe_started = True
+        else:
+            print('Stopping probe...')
+            self.probe_started = False
+            self.timer.stop()
+
+    def probe_send(self):
+        probe_str = 'prb '
+        for i in range(len(self.probe_list)):
+            probe_str += '%s ' % self.probe_list[i]['id']
+
+        probe_str += '\n'
+        self.cli.send(probe_str)
+
     @pyqtSlot(bool)
-    def action_connect(self, checked):
+    def connect_com(self, checked):
 
         if checked:
-            self.ui.actionConnect.setChecked(self.cli.open(self.configuration.port))
+            self.ui.actionConnect.setChecked(self.cli.open(self.parameters.get_serial_port()))
+            self.variables.refresh_table()
         else:
             self.cli.close()
 
@@ -132,58 +170,48 @@ class IMCC(QMainWindow):
 
         ret_str = self.cli.get_item()
 
-        if self.probe_started:
-            try:
-                if ret_str.startswith('[GET]'):
+        try:
+            if ret_str.startswith('[GET]'):
 
-                    # Clean the string
-                    ret_str = ret_str[5:]
-                    ret_str = re.sub('\s+', ' ', ret_str)
-                    ret_str = re.sub('\A\s', '', ret_str)
-                    ret_str = re.sub('\s\Z', '', ret_str)
-                    ret_str = re.sub('[^a-zA-Z0-9=_\-. ]+', '', ret_str)
+                # Clean the string
+                ret_str = ret_str[5:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9=_\-. ]+', '', ret_str)
 
-                    cmd_args = ret_str.split("=")
+                cmd_args = ret_str.split("=")
 
-                    if len(cmd_args) == 2:
-                        self.graphics.set_probe_value(cmd_args[0], int(cmd_args[1]))
+                if len(cmd_args) == 2:
+                    var = cmd_args[0]
+                    val = int(cmd_args[1])
+                    self.graphics.set_probe_value(var, val)
 
-                        # TODO: move robot(x,y,a) into dedicated holder
-                        # args_val = cmd_args[1].split(":")
-                        #
-                        # x = int(args_val[0])
-                        # y = int(args_val[1])
-                        # a = int(args_val[2])
-                        #
-                        # # self.graphics_dock.append_value(x)
-                        # self.graphics.set_probe_value("robot.cs.pos.x", x)
-                        # self.graphics.set_probe_value("robot.cs.pos.y", y)
-                        # self.graphics.set_probe_value("robot.cs.pos.a", a)
-                        #
-                        # self.graphics.table.add_robot_pos(x, y, a)
+            elif ret_str.startswith('[PRB]'):
 
-                if ret_str.startswith('[PRB]'):
+                # Clean the string
+                ret_str = ret_str[5:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^0-9\-. ]+', '', ret_str)
 
-                    # Clean the string
-                    ret_str = ret_str[5:]
-                    ret_str = re.sub('\s+', ' ', ret_str)
-                    ret_str = re.sub('\A\s', '', ret_str)
-                    ret_str = re.sub('\s\Z', '', ret_str)
-                    ret_str = re.sub('[^0-9\-. ]+', '', ret_str)
+                values = ret_str.split(" ")
 
-                    values = ret_str.split(" ")
+                if len(values) == len(self.probe_list):
+                    for i in range(len(values)):
+                        var = self.probe_list[i]['name']
+                        val = int(values[i])
 
-                    if len(values) == len(self.probe_list):
-                        for i in range(len(values)):
-                            self.graphics.set_probe_value(self.probe_list[i]['name'], int(values[i]))
+                        self.graphics.set_probe_value(var, val)
 
-            except:
-                pass
+                        if var == self.parameters.get_robot_x_variable():
+                            self.robot.set_x(val)
+                        elif var == self.parameters.get_robot_y_variable():
+                            self.robot.set_y(val)
+                        elif var == self.parameters.get_robot_a_variable():
+                            self.robot.set_a(val)
 
-        else:
+                if self.parameters.get_robot_update_data():
+                    self.graphics.table.add_robot_pos(self.robot.get_pos())
 
-            # Decode returned strings
-            if ret_str.startswith('[VAR]'):
+            elif ret_str.startswith('[VAR]'):
 
                 # Display, it is not spammed on screen and would look odd with the header only
                 # TODO: remove echo mode from target, put instead interactive mode which does not echo nor
@@ -192,9 +220,7 @@ class IMCC(QMainWindow):
 
                 # Clean the string
                 ret_str = ret_str[5:]
-                ret_str = re.sub('\s+', ' ',     ret_str)
-                ret_str = re.sub('\A\s', '', ret_str)
-                ret_str = re.sub('\s\Z', '', ret_str)
+                ret_str = self.cleanup_spaces(ret_str)
                 ret_str = re.sub('[^a-zA-Z0-9_./ ]+', '', ret_str)
 
                 # Split items, add it to the variable list if it matches the format
@@ -212,36 +238,6 @@ class IMCC(QMainWindow):
             else:
                 self.console.append_text(ret_str)
 
-    def reset(self):
-        self.cli.flush()
-        self.cli.send('sys reset\n')
-
-    def probe_list_update(self):
-        self.probe_list = self.variables.get_probe_list()
-        self.graphics.set_probe_list(self.probe_list)
-
-    def probe_start_stop(self, state):
-
-        if state:
-            print('Starting probe...')
-            self.cli.flush()
-            self.timer.timeout.connect(self.probe_send_test)
-            self.timer.start(100)
-            self.probe_started = True
-        else:
-            print('Stopping probe...')
-            self.probe_started = False
-            self.timer.stop()
-
-    def probe_send_test(self):
-        probe_str = 'prb '
-        for i in range(len(self.probe_list)):
-            probe_str += '%s ' % self.probe_list[i]['id']
-
-        probe_str += '\n'
-        self.cli.send(probe_str)
-
-        # Old-school with 'get'
-        # for i in range(len(self.probe_list)):
-        #     self.cli.send('get %s\n' % self.probe_list[i])
+        except:
+            pass
 

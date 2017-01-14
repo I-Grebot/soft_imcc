@@ -104,6 +104,20 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                               pxMode=False)
         self.viewbox.addItem(self.robot_angle_arrow)
 
+    def set_robot_visible(self, visible):
+        self.robot_pos_plot.setVisible(visible)
+        self.robot_angle_arrow.setVisible(visible)
+
+    def set_robot_history_visible(self, visible):
+        self.robot_pos_hist_plot.setVisible(visible)
+
+    def set_robot_color(self, color):
+        self.robot_pos_plot.setSymbolBrush(color)
+        color.setAlpha(210)
+        self.robot_angle_arrow.setBrush(color)
+        color.setAlpha(200)
+        self.robot_pos_hist_plot.setPen(pg.mkPen(color=color, width=5))
+
     def draw_target(self):
         self.target_pos_plot = self.plot_widget.plot(pen=None,
                                                      symbol='+', symbolPen=None, symbolSize=100, pxMode=False,
@@ -111,8 +125,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                                      name='Target position')
         self.viewbox.addItem(self.target_pos_plot)
 
-    def add_robot_pos(self, x, y, a):
-        self.robot_pos.append({'x': x, 'y': y, 'a': a})
+    def add_robot_pos(self, pos):
+        self.robot_pos.append(pos)
         x = [item['x'] for item in self.robot_pos]
         y = [item['y'] for item in self.robot_pos]
         a = [item['a'] for item in self.robot_pos]

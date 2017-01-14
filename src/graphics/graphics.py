@@ -16,6 +16,7 @@ class Graphics(Ui_Graphics):
         {'name': 'General Parameters', 'type': 'group', 'children': [
             {'name': 'Integer', 'type': 'int', 'value': 10},
         ]},
+
         {'name': 'Table View', 'type': 'group', 'children': [
             {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
             {'name': 'Playground Image', 'type': 'group', 'children': [
@@ -24,7 +25,12 @@ class Graphics(Ui_Graphics):
                 {'name': 'Origin Coord. Y', 'type': 'int', 'value': -40},
                 {'name': 'Scaling Factor', 'type': 'float', 'value': 3000/1146, 'decimals': 4, 'suffix': 'px/mm'},
                 {'name': 'Update', 'type': 'action'}
-            ]}
+            ]},
+            {'name': 'Robot', 'type': 'group', 'children': [
+                {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
+                {'name': 'History', 'type': 'bool', 'value': True, 'tip': "Toggle history on/off"},
+                {'name': 'Color', 'type': 'color', 'value': (0, 0, 200, 150), 'tip': "Foreground color"}
+            ]},
         ]},
         PlotsGroup(name="Plots"),
     ]
@@ -63,7 +69,7 @@ class Graphics(Ui_Graphics):
         self.update_table_playground()
 
         # Some default states
-        self.table.add_robot_pos(0, 0, 90)
+        self.table.add_robot_pos({'x': 0, 'y': 0, 'a': 90})
         self.table.update_target_pos(1500, 1000)
 
     def update_table_playground(self):
@@ -100,6 +106,15 @@ class Graphics(Ui_Graphics):
 
         self.p.param('Table View').param('Playground Image').param('Update').sigActivated.connect(
             self.update_table_playground)
+
+        self.p.param('Table View').param('Robot').param('Visible').sigValueChanged.connect(
+            lambda: self.table.set_robot_visible(self.p.param('Table View').param('Robot').param('Visible').value()))
+
+        self.p.param('Table View').param('Robot').param('History').sigValueChanged.connect(
+            lambda: self.table.set_robot_history_visible(self.p.param('Table View').param('Robot').param('History').value()))
+
+        self.p.param('Table View').param('Robot').param('Color').sigValueChanged.connect(
+            lambda: self.table.set_robot_color(self.p.param('Table View').param('Robot').param('Color').value()))
 
         # Plots
         self.p.param('Plots').sigChildAdded.connect(self.add_plot_window)
@@ -150,20 +165,20 @@ class Graphics(Ui_Graphics):
                 if plots[j].value() == probe:
                     plots[j].add_data(time.time(), new_value)
 
-    def append_value(self, new_value):
-
-        self.x = np.roll(self.x, -1)
-        self.x[self.nb_points - 1] = self.cnt
-
-        self.y1 = np.roll(self.y1, -1)
-        self.y1[self.nb_points - 1] = new_value
-
-        self.y2 = self.y1 + 5
-
-        self.plot1.setData(self.x, self.y1)
-        self.plot2.setData(self.x, self.y2)
-
-        self.cnt += self.step
+    # def append_value(self, new_value):
+    #
+    #     self.x = np.roll(self.x, -1)
+    #     self.x[self.nb_points - 1] = self.cnt
+    #
+    #     self.y1 = np.roll(self.y1, -1)
+    #     self.y1[self.nb_points - 1] = new_value
+    #
+    #     self.y2 = self.y1 + 5
+    #
+    #     self.plot1.setData(self.x, self.y1)
+    #     self.plot2.setData(self.x, self.y2)
+    #
+    #     self.cnt += self.step
 
     # def save_layout(self):
     #     self.center_dock_layout = self.center_dock_area.saveState()
