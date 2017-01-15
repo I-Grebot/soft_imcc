@@ -38,6 +38,7 @@ class IMCC(QMainWindow):
 
         self.parameters = Parameters(showHeader=False)
         self.cli = Cli()
+        self.connect_first_time = False
 
         self.robot = Robot()
 
@@ -107,6 +108,7 @@ class IMCC(QMainWindow):
         self.graphics.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
+        self.variables.variable_changed[str, str].connect(self.variable_updated)
 
     def set_status_bar_message(self, str):
         self.ui.statusbar.showMessage(str)
@@ -165,10 +167,31 @@ class IMCC(QMainWindow):
     def connect_com(self, checked):
 
         if checked:
-            self.ui.actionConnect.setChecked(self.cli.open(self.parameters.get_serial_port()))
-            self.variables.refresh_table()
+            open_success = self.cli.open(self.parameters.get_serial_port())
+            self.ui.actionConnect.setChecked(open_success)
+
+            if open_success:
+
+                # Auto-refresh only the first time
+                if self.connect_first_time is False:
+                    self.variables.refresh_table()
+
+                self.variables.set_table_enabled(True)
+                self.connect_first_time = True
+                self.set_status_bar_message("Opened")
+
+            else:
+                self.set_status_bar_message("Error")
+
         else:
             self.cli.close()
+            self.variables.set_table_enabled(False)
+            self.set_status_bar_message("Closed")
+
+    @pyqtSlot(str, str)
+    def variable_updated(self, name, value):
+        set_str = 'set ' + name + ' ' + value + '\n'
+        self.cli.send(set_str)
 
     @pyqtSlot()
     def cli_process(self):

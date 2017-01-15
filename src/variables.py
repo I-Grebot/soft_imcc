@@ -22,8 +22,10 @@ class Variables(QObject, Ui_Variables):
     # -------------------------------------------------------------------------
     # Attributes
     # -------------------------------------------------------------------------
+
     # Signals factory
     probe_list_changed = pyqtSignal(name='probeListChanged')
+    variable_changed = pyqtSignal([str, str], name='variableChanged')
 
     # -------------------------------------------------------------------------
     # Constructor
@@ -40,6 +42,7 @@ class Variables(QObject, Ui_Variables):
 
         # Connections
         self.tableWidget_variables.itemClicked.connect(self.table_item_clicked)
+        self.tableWidget_variables.itemChanged.connect(self.table_item_changed)
         self.pushButton_refresh.clicked.connect(self.refresh_table)
 
     # -------------------------------------------------------------------------
@@ -56,6 +59,21 @@ class Variables(QObject, Ui_Variables):
 
         # Request new values from the CLI
         self.cli.send('var\n')
+
+    def set_table_enabled(self, value):
+
+        self.tableWidget_variables.blockSignals(True)
+
+        for i in range(self.tableWidget_variables.rowCount()):
+            for j in range(self.tableWidget_variables.columnCount()):
+                item = self.tableWidget_variables.item(i, j)
+                flags = item.flags()
+                if value:
+                    item.setFlags(flags | Qt.ItemIsEnabled)
+                else:
+                    item.setFlags(flags & ~Qt.ItemIsEnabled)
+
+        self.tableWidget_variables.blockSignals(False)
 
     def add_item(self, item):
 
@@ -79,9 +97,21 @@ class Variables(QObject, Ui_Variables):
         self.tableWidget_variables.setItem(row, self.COLUMN_ACCESS, item_access)
 
         item_value = QTableWidgetItem(item['value'])
-        item_value.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-        item_value.setForeground(QColor(0, 0, 200))
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+        if item['access'] != "RD":
+            flags |= Qt.ItemIsEditable
+            item_color = QColor(200, 0, 0)
+        else:
+            item_color = QColor(0, 0, 200)
+
+        item_value.setFlags(flags)
+        item_value.setForeground(item_color)
+
+        # Prevent signaling when modifying the value
+        self.tableWidget_variables.blockSignals(True)
         self.tableWidget_variables.setItem(row, self.COLUMN_VALUE, item_value)
+        self.tableWidget_variables.blockSignals(False)
 
         item_unit = QTableWidgetItem(item['unit'])
         item_unit.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
@@ -91,6 +121,7 @@ class Variables(QObject, Ui_Variables):
         item_probe.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
         item_probe.setCheckState(Qt.Unchecked)
         self.tableWidget_variables.setItem(row, self.COLUMN_PROBE, item_probe)
+
 
     def get_probe_list(self):
 
@@ -113,6 +144,10 @@ class Variables(QObject, Ui_Variables):
         if item.column() == self.COLUMN_PROBE:
             self.probe_list_changed.emit()
 
+    def table_item_changed(self, item):
 
-
+        if item.column() == self.COLUMN_VALUE:
+            name = self.tableWidget_variables.item(item.row(), self.COLUMN_NAME).text()
+            value = self.tableWidget_variables.item(item.row(), self.COLUMN_VALUE).text()
+            self.variable_changed.emit(name, value)
 
