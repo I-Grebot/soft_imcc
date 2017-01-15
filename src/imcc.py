@@ -15,8 +15,9 @@ from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.dockarea import *
 import pyqtgraph.console
 
-# User-Interface for this module
+# User-Interface
 from ui.imcc import Ui_imcc
+from ui import imcc_rc
 
 # Other modules dependencies
 from stm32flash import Stm32Flash
@@ -104,8 +105,8 @@ class IMCC(QMainWindow):
 
         self.cli.data_available.connect(self.cli_process)
 
-        self.graphics.actionReset.triggered[bool].connect(self.reset)
-        self.graphics.actionProbe.triggered[bool].connect(self.probe_start_stop)
+        self.ui.actionReset.triggered[bool].connect(self.reset)
+        self.ui.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
         self.variables.variable_changed[str, str].connect(self.variable_updated)

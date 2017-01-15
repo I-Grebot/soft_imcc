@@ -1,9 +1,14 @@
-#PyCharm files
+# PyCharm files
 .idea/workspace.xml
 .idea/tasks.xml
 
-# QTDesigner backups
+# Resource files (that are then compiled)
+qt_designer/images
+qt_designer/silk
+
+# QTDesigner files
 *.ui~
+*.pro.user
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
