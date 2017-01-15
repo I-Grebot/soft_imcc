@@ -1,14 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-
-import sys
-import glob
 import serial
 from serial.tools import list_ports
-from multiprocessing import Process
 
-from PyQt5.QtCore import *
+from PyQt5.QtCore import QProcess
 from PyQt5.QtWidgets import QFileDialog
 
 from ui.stm32flash import Ui_stm32flash
@@ -18,8 +14,6 @@ class Stm32Flash(Ui_stm32flash):
     # -------------------------------------------------------------------------
     # Constants
     # -------------------------------------------------------------------------
-
-    BINARY_PATH = '..\\bin\\stm32flash.exe'
 
     MODES = ['8e1', '8n1']
     BAUDRATES = ['1200',
@@ -40,6 +34,9 @@ class Stm32Flash(Ui_stm32flash):
     # -------------------------------------------------------------------------
     def __init__(self, dockwidget):
         self.setupUi(dockwidget)
+
+        # Internal attributes
+        self.binary_path = ""
 
         # Define sub-process that'll be used for calling the stm32flash executable
         self.process = QProcess()
@@ -82,6 +79,9 @@ class Stm32Flash(Ui_stm32flash):
     # -------------------------------------------------------------------------
     # Internal handlers
     # -------------------------------------------------------------------------
+
+    def set_binary_path(self, value):
+        self.binary_path = value
 
     def get_mode(self):
         return self.comboBox_mode.currentText()
@@ -146,7 +146,7 @@ class Stm32Flash(Ui_stm32flash):
     def action_infos(self):
         self.set_basic_args()
         self.args.append(self.get_port())
-        self.process.start(self.BINARY_PATH, self.args)
+        self.process.start(self.binary_path, self.args)
 
     def action_write(self):
 
@@ -165,7 +165,7 @@ class Stm32Flash(Ui_stm32flash):
                 self.args.append('-R')
 
             self.args.append(self.get_port())
-            self.process.start(self.BINARY_PATH, self.args)
+            self.process.start(self.binary_path, self.args)
 
         else:
             print('Error: ' + file + ' does not exist!')
@@ -174,7 +174,7 @@ class Stm32Flash(Ui_stm32flash):
         self.set_basic_args()
         self.args.append('-o')
         self.args.append(self.get_port())
-        self.process.start(self.BINARY_PATH, self.args)
+        self.process.start(self.binary_path, self.args)
 
     def action_read(self):
         file, _ = QFileDialog.getSaveFileName(caption='Save Hex file', filter='*.bin')
@@ -182,4 +182,4 @@ class Stm32Flash(Ui_stm32flash):
         self.args.append('-r')
         self.args.append(file)
         self.args.append(self.get_port())
-        self.process.start(self.BINARY_PATH, self.args)
+        self.process.start(self.binary_path, self.args)

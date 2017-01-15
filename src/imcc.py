@@ -99,6 +99,8 @@ class IMCC(QMainWindow):
         self.ui.action_viewBootload.triggered[bool].connect(self.stm32flash_dock.setVisible)
         self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.action_viewBootload.setChecked)
 
+        self.parameters.bootloader_path_changed.connect(self.update_bootload_path)
+
         self.cli.data_available.connect(self.cli_process)
 
         self.graphics.actionReset.triggered[bool].connect(self.reset)
@@ -111,6 +113,9 @@ class IMCC(QMainWindow):
 
     def append_console(self, str):
         self.console.append_text(str)
+
+    def update_bootload_path(self):
+        self.stm32flash.set_binary_path(self.parameters.get_bootloader_path())
 
     # -------------------------------------------------------------------------
     # Static methods

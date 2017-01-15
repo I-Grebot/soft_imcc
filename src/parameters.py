@@ -5,11 +5,14 @@
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.parametertree.parameterTypes as pTypes
+from PyQt5.QtCore import pyqtSignal
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
 import serial
 from serial.tools import list_ports
 
 class Parameters(ParameterTree):
+
+    bootloader_path_changed = pyqtSignal(name='bootloaderPathChanged')
 
     params = [
         {'name': 'Communication', 'type': 'group', 'children': [
@@ -27,6 +30,9 @@ class Parameters(ParameterTree):
             {'name': 'X Variable', 'type': 'str', 'value': 'robot.cs.pos.x'},
             {'name': 'Y Variable', 'type': 'str', 'value': 'robot.cs.pos.y'},
             {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'}
+        ]},
+        {'name': 'Bootloader', 'type': 'group', 'children': [
+            {'name': 'Binary path', 'type': 'str', 'value': '..\\bin\\stm32flash.exe'},
         ]}
     ]
 
@@ -44,6 +50,8 @@ class Parameters(ParameterTree):
     def connect(self):
         self.p.param("Communication").param("Port").sigValueChanged.connect(self.update_port_description)
         self.p.param("Communication").param("Refresh").sigActivated.connect(self.refresh_serial_ports)
+        self.p.param("Bootloader").param("Binary path").sigValueChanged.connect(
+            lambda: self.bootloader_path_changed.emit())
 
     # -------------------------------------------------------------------------
     # Getters
@@ -66,6 +74,9 @@ class Parameters(ParameterTree):
 
     def get_serial_port(self):
         return self.p.param("Communication").param("Port").value()
+
+    def get_bootloader_path(self):
+        return self.p.param("Bootloader").param("Binary path").value()
 
     # -------------------------------------------------------------------------
     # Actions
