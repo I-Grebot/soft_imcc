@@ -41,9 +41,21 @@
     </item>
    </layout>
   </widget>
-  <widget class="QToolBar" name="toolBar">
+  <widget class="QToolBar" name="toolBar_actions">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
-    <string>toolBar</string>
+    <string>Graphics toolbar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -51,23 +63,36 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionReset"/>
-   <addaction name="actionProbe"/>
+   <addaction name="actionCursor"/>
+   <addaction name="actionGoto"/>
   </widget>
-  <action name="actionProbe">
+  <action name="actionCursor">
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/cursor.png</normaloff>:/icons/silk/cursor.png</iconset>
+   </property>
    <property name="text">
-    <string>Probe</string>
+    <string>Cursor</string>
    </property>
   </action>
-  <action name="actionReset">
+  <action name="actionGoto">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/car.png</normaloff>:/icons/silk/car.png</iconset>
+   </property>
    <property name="text">
-    <string>Reset</string>
+    <string>Goto</string>
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="imcc.qrc"/>
+ </resources>
  <connections/>
 </ui>

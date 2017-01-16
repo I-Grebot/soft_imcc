@@ -69,8 +69,9 @@ class Graphics(Ui_Graphics):
         self.update_table_playground()
 
         # Some default states
-        self.table.add_robot_pos({'x': 0, 'y': 0, 'a': 90})
+        self.table.add_robot_pos({'x': 0, 'y': 0, 'a': 0})
         self.table.update_target_pos(1500, 1000)
+        self.table.set_crosshair_visible(False)
 
     def update_table_playground(self):
 
@@ -100,6 +101,10 @@ class Graphics(Ui_Graphics):
 
     def connect(self):
 
+        # Toolbar
+        self.actionCursor.triggered.connect(self.action_cursor)
+        self.actionGoto.triggered.connect(self.action_goto)
+
         # TableView
         self.p.param('Table View').param('Visible').sigValueChanged.connect(
             lambda: self.dock_table.setVisible(self.p.param('Table View').param('Visible').value()))
@@ -115,6 +120,8 @@ class Graphics(Ui_Graphics):
 
         self.p.param('Table View').param('Robot').param('Color').sigValueChanged.connect(
             lambda: self.table.set_robot_color(self.p.param('Table View').param('Robot').param('Color').value()))
+
+        self.table.left_click_playground[int, int].connect(self.left_click_playground)
 
         # Plots
         self.p.param('Plots').sigChildAdded.connect(self.add_plot_window)
@@ -165,26 +172,26 @@ class Graphics(Ui_Graphics):
                 if plots[j].value() == probe:
                     plots[j].add_data(time.time(), new_value)
 
-    # def append_value(self, new_value):
-    #
-    #     self.x = np.roll(self.x, -1)
-    #     self.x[self.nb_points - 1] = self.cnt
-    #
-    #     self.y1 = np.roll(self.y1, -1)
-    #     self.y1[self.nb_points - 1] = new_value
-    #
-    #     self.y2 = self.y1 + 5
-    #
-    #     self.plot1.setData(self.x, self.y1)
-    #     self.plot2.setData(self.x, self.y2)
-    #
-    #     self.cnt += self.step
+    def action_cursor(self, val):
+        if val:
+            if self.actionGoto.isChecked():
+                self.actionGoto.setChecked(False)
 
-    # def save_layout(self):
-    #     self.center_dock_layout = self.center_dock_area.saveState()
-    #
-    # def load_layout(self):
-    #     self.center_dock_area.restoreState(self.center_dock_layout)
+        self.table.set_crosshair_visible(val)
+
+    def action_goto(self, val):
+        if val:
+            if self.actionCursor.isChecked():
+                self.actionCursor.setChecked(False)
+
+        self.table.set_crosshair_visible(val)
+
+    def left_click_playground(self, x, y):
+        if self.actionCursor.isChecked():
+            print('Mark', x, y)
+
+        if self.actionGoto.isChecked():
+            print('Goto', x, y)
 
 
 

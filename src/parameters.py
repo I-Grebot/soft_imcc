@@ -13,6 +13,7 @@ from serial.tools import list_ports
 class Parameters(ParameterTree):
 
     bootloader_path_changed = pyqtSignal(name='bootloaderPathChanged')
+    playground_size_changed = pyqtSignal(name='playgroundSizeChanged')
 
     params = [
         {'name': 'Communication', 'type': 'group', 'children': [
@@ -25,6 +26,10 @@ class Parameters(ParameterTree):
             {'name': 'Frequency', 'type': 'float', 'value': 10, 'dec': True, 'step': 1, 'siPrefix': True,
              'limits': (1,20), 'suffix': 'Hz'}
          ]},
+        {'name': 'Rules', 'type': 'group', 'children': [
+            {'name': 'Table Width', 'type': 'int', 'value': 3000, 'int': True, 'suffix': 'mm'},
+            {'name': 'Table Height', 'type': 'int', 'value': 2000, 'int': True, 'suffix': 'mm'}
+        ]},
         {'name': 'Robot', 'type': 'group', 'children': [
             {'name': 'Update data', 'type': 'bool', 'value': True, 'tip': "Update table-view data when probing"},
             {'name': 'X Variable', 'type': 'str', 'value': 'robot.cs.pos.x'},
@@ -52,6 +57,10 @@ class Parameters(ParameterTree):
         self.p.param("Communication").param("Refresh").sigActivated.connect(self.refresh_serial_ports)
         self.p.param("Bootloader").param("Binary path").sigValueChanged.connect(
             lambda: self.bootloader_path_changed.emit())
+        self.p.param("Rules").param("Table Width").sigValueChanged.connect(
+            lambda: self.playground_size_changed.emit())
+        self.p.param("Rules").param("Table Height").sigValueChanged.connect(
+            lambda: self.playground_size_changed.emit())
 
     # -------------------------------------------------------------------------
     # Getters
@@ -59,6 +68,12 @@ class Parameters(ParameterTree):
 
     def get_probing_frequency(self):
         return self.p.param("Probing").param("Frequency").value()
+
+    def get_playground_width(self):
+        return self.p.param("Rules").param("Table Width").value()
+
+    def get_playground_height(self):
+        return self.p.param("Rules").param("Table Height").value()
 
     def get_robot_update_data(self):
         return self.p.param("Robot").param("Update data").value()

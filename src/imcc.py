@@ -92,6 +92,9 @@ class IMCC(QMainWindow):
         self.graphics = Graphics()
         self.setCentralWidget(self.graphics.win)
 
+        # Some default loads
+        self.update_playground_size()
+
     def connect(self):
         self.ui.actionConnect.triggered[bool].connect(self.connect_com)
 
@@ -101,6 +104,7 @@ class IMCC(QMainWindow):
         self.ui.action_viewBootload.triggered[bool].connect(self.stm32flash_dock.setVisible)
         self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.action_viewBootload.setChecked)
 
+        self.parameters.playground_size_changed.connect(self.update_playground_size)
         self.parameters.bootloader_path_changed.connect(self.update_bootload_path)
 
         self.cli.data_available.connect(self.cli_process)
@@ -116,6 +120,13 @@ class IMCC(QMainWindow):
 
     def append_console(self, str):
         self.console.append_text(str)
+
+    def update_playground_size(self):
+        width = self.parameters.get_playground_width()
+        height = self.parameters.get_playground_height()
+        self.graphics.update_table_playground()
+        self.graphics.table.set_playground_size(width, height)
+        self.graphics.table.update_table_outline()
 
     def update_bootload_path(self):
         self.stm32flash.set_binary_path(self.parameters.get_bootloader_path())
