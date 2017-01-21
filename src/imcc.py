@@ -94,6 +94,10 @@ class IMCC(QMainWindow):
 
         # Some default loads
         self.update_playground_size()
+        self.update_robot()
+
+        self.graphics.table.add_robot_pos({'x': 0, 'y': 0, 'a': 0})
+        self.graphics.table.update_target_pos(1500, 1000)
 
     def connect(self):
         self.ui.actionConnect.triggered[bool].connect(self.connect_com)
@@ -104,6 +108,7 @@ class IMCC(QMainWindow):
         self.ui.action_viewBootload.triggered[bool].connect(self.stm32flash_dock.setVisible)
         self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.action_viewBootload.setChecked)
 
+        self.parameters.robot_setting_changed.connect(self.update_robot)
         self.parameters.playground_size_changed.connect(self.update_playground_size)
         self.parameters.bootloader_path_changed.connect(self.update_bootload_path)
 
@@ -127,6 +132,10 @@ class IMCC(QMainWindow):
         self.graphics.update_table_playground()
         self.graphics.table.set_playground_size(width, height)
         self.graphics.table.update_table_outline()
+
+    def update_robot(self):
+        robot_radius = self.parameters.get_robot_radius()
+        self.graphics.table.set_robot_radius(robot_radius)
 
     def update_bootload_path(self):
         self.stm32flash.set_binary_path(self.parameters.get_bootloader_path())

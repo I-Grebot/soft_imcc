@@ -14,6 +14,7 @@ class Parameters(ParameterTree):
 
     bootloader_path_changed = pyqtSignal(name='bootloaderPathChanged')
     playground_size_changed = pyqtSignal(name='playgroundSizeChanged')
+    robot_setting_changed = pyqtSignal(name='robotSettingChanged')
 
     params = [
         {'name': 'Communication', 'type': 'group', 'children': [
@@ -34,7 +35,8 @@ class Parameters(ParameterTree):
             {'name': 'Update data', 'type': 'bool', 'value': True, 'tip': "Update table-view data when probing"},
             {'name': 'X Variable', 'type': 'str', 'value': 'robot.cs.pos.x'},
             {'name': 'Y Variable', 'type': 'str', 'value': 'robot.cs.pos.y'},
-            {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'}
+            {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'},
+            {'name': 'Radius', 'type': 'int', 'value': 150, 'int': True, 'suffix': 'mm'}
         ]},
         {'name': 'Bootloader', 'type': 'group', 'children': [
             {'name': 'Binary path', 'type': 'str', 'value': '..\\bin\\stm32flash.exe'},
@@ -57,6 +59,8 @@ class Parameters(ParameterTree):
         self.p.param("Communication").param("Refresh").sigActivated.connect(self.refresh_serial_ports)
         self.p.param("Bootloader").param("Binary path").sigValueChanged.connect(
             lambda: self.bootloader_path_changed.emit())
+        self.p.param("Robot").param("Radius").sigValueChanged.connect(
+            lambda: self.robot_setting_changed.emit())
         self.p.param("Rules").param("Table Width").sigValueChanged.connect(
             lambda: self.playground_size_changed.emit())
         self.p.param("Rules").param("Table Height").sigValueChanged.connect(
@@ -86,6 +90,9 @@ class Parameters(ParameterTree):
 
     def get_robot_a_variable(self):
         return self.p.param("Robot").param("A Variable").value()
+
+    def get_robot_radius(self):
+        return self.p.param("Robot").param("Radius").value()
 
     def get_serial_port(self):
         return self.p.param("Communication").param("Port").value()

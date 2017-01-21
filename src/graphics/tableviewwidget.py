@@ -23,8 +23,10 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
         # Define general settings and the main viewbox
         self.setBackground('w')
-        self.viewbox = self.addViewBox(row=2, col=1)
+        self.viewbox = self.addViewBox()
         self.viewbox.setAspectLocked(True)
+        self.viewbox.disableAutoRange()
+        # self.viewbox.setMenuEnabled(False)
 
         # Playground image
         self.playground_img = pg.ImageItem()
@@ -32,7 +34,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.viewbox.addItem(self.playground_img_data)
 
         # Plot Widget for overlayed markings
-        self.plot_widget = pg.PlotWidget()
+        self.plot_widget = pg.PlotWidget(lockAspect=True)
+        self.plot_widget.disableAutoRange()
 
         # Constant from image - default dummies value (not working ~ need to be defined externaly)
         self.playground_filename = "table.png"
@@ -42,12 +45,14 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.playground_size_mm = [0, 0]
 
         # Parameters/Variables
-        self.robot_radius = 300
+        self.robot_radius = 10
         self.robot_pos = deque(maxlen=self.ROBOT_POS_BUFFER_SIZE)
+        self.crosshair_visible = False
 
         # Draw all table view items
         # self.draw_playground()
         self.draw_table_outline()
+        self.draw_grid()
         self.draw_crosshair()
         self.draw_robot()
         self.draw_target()
@@ -65,6 +70,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
             self.playground_img_data.setScale(self.px_to_mm)
             self.playground_img_data.setPos(self.playground_origin_coord_px * self.px_to_mm)
             self.image_size_px = self.playground_img.size
+            self.update_range()
 
         except IOError:
             print('Error: cannot open Table image file %s' %self.playground_filename)
@@ -75,6 +81,10 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                                   pxMode=False, name="Outline")
         self.viewbox.addItem(self.outline_plot)
         self.update_table_outline()
+
+    def draw_grid(self):
+        self.grid = pg.GridItem()
+        self.viewbox.addItem(self.grid)
 
     def update_table_outline(self):
 
@@ -87,6 +97,18 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
         # Update data
         self.outline_plot.setData(x, y)
+
+    def update_range(self):
+
+        # Calculate range (playground image must fit)
+        image_origin_mm = QPoint(self.playground_origin_coord_px.x() * self.px_to_mm,
+                                 self.playground_origin_coord_px.x() * self.px_to_mm)
+
+        image_end_mm = QPoint(image_origin_mm.x() + (self.image_size_px[0] * self.px_to_mm),
+                              image_origin_mm.y() + (self.image_size_px[1] * self.px_to_mm))
+
+        self.viewbox.setXRange(min=image_origin_mm.x(), max=image_end_mm.x(), padding=None)
+        self.viewbox.setYRange(min=image_origin_mm.y(), max=image_end_mm.y(), padding=None)
 
     def draw_crosshair(self):
 
@@ -130,20 +152,21 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.robot_coord_label = pg.LabelItem(justify='left')
         self.addItem(self.robot_coord_label)
 
-
     def set_playground_size(self, width, height):
         self.playground_size_mm[0] = width
         self.playground_size_mm[1] = height
 
-        self.plot_widget.setXRange(0, self.playground_size_mm[0], 0)
-        self.plot_widget.setYRange(0, self.playground_size_mm[1], 0)
-
         self.update_table_outline()
 
     def set_crosshair_visible(self, visible):
-        self.cross_v_line.setVisible(visible)
-        self.cross_h_line.setVisible(visible)
-        self.mouse_coord_label.setVisible(visible)
+        self.crosshair_visible = visible
+
+        if not visible:
+            self.cross_v_line.setVisible(visible)
+            self.cross_h_line.setVisible(visible)
+
+    def set_grid_visible(self, visible):
+        self.grid.setVisible(visible)
 
     def set_robot_visible(self, visible):
         self.robot_pos_plot.setVisible(visible)
@@ -159,6 +182,14 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         color.setAlpha(200)
         self.robot_pos_hist_plot.setPen(pg.mkPen(color=color, width=5))
 
+    def set_robot_radius(self, radius):
+        self.robot_radius = radius
+        self.robot_pos_plot.setSymbolSize(self.robot_radius*2)
+
+        # Redraw the arrow
+        self.robot_angle_arrow.setStyle(headLen=self.robot_radius)
+        self.update_arrow()
+
     def draw_target(self):
         self.target_pos_plot = self.plot_widget.plot(pen=None,
                                                      symbol='+', symbolPen=None, symbolSize=100, pxMode=False,
@@ -172,9 +203,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         y = [item['y'] for item in self.robot_pos]
         a = [item['a'] for item in self.robot_pos]
 
-        last_x = x[len(x)-1]
-        last_y = y[len(y)-1]
-        last_a = a[len(a)-1]
+        last_x = x[-1]
+        last_y = y[-1]
 
         # Plot the current location (big plot) with the latest entry
         self.robot_pos_plot.setData(x=[last_x], y=[last_y])
@@ -182,18 +212,23 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         # Plot the history location
         self.robot_pos_hist_plot.setData(x=x, y=y)
 
-        # Plot the arrow displaying the current orientation
-        self.robot_angle_arrow.setPos(QPoint(last_x + self.robot_radius/2*np.cos(np.radians(last_a)),
-                                             last_y + self.robot_radius/2*np.sin(np.radians(last_a))))
-        self.robot_angle_arrow.setRotation(last_a) # Bug in the setStyle of ArrowItem() class
+        # Redraw the orientation arrow
+        self.update_arrow()
 
         # Update label
         self.robot_coord_label.setText(
             "<span style='color: red;font-weight:bold'>Robot:</span><br />"
-            "X = %d<br />"
-            "Y = %d<br />"
-            "A = %d" % (
+            "X = %+05d<br />"
+            "Y = %+05d<br />"
+            "A = %+03d" % (
                 pos['x'], pos['y'], pos['a']))
+
+    def update_arrow(self):
+        if len(self.robot_pos) > 0:
+            last_pos = self.robot_pos[-1]
+            self.robot_angle_arrow.setPos(QPoint(last_pos['x'] + self.robot_radius * np.cos(np.radians(last_pos['a'])),
+                                                 last_pos['y'] + self.robot_radius * np.sin(np.radians(last_pos['a']))))
+            self.robot_angle_arrow.setRotation(last_pos['a'])  # Bug in the setStyle of ArrowItem() class
 
     def update_target_pos(self, x, y):
         self.target_pos_plot.setData(x=[x], y=[y])
@@ -202,17 +237,26 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
         # Retrieve mouse coordinates
         mouse_point = self.viewbox.mapSceneToView(evt[0])
+        x = mouse_point.x()
+        y = mouse_point.y()
 
         # Update Mouse Coordinate label
         self.mouse_coord_label.setText(
             "<span style='color: red;font-weight:bold'>Mouse:</span><br />"
-            "X = %d<br />"
-            "Y = %d" % (
-                mouse_point.x(), mouse_point.y()))
+            "X = %+05d<br />"
+            "Y = %+05d" % (x, y))
 
-        # Update crosshair drawing
-        self.cross_v_line.setPos(mouse_point.x())
-        self.cross_h_line.setPos(mouse_point.y())
+        # Update crosshair drawing if there are within image bounds
+        if self.crosshair_visible:
+            if (x >= 0) and (x <= self.playground_size_mm[0]) and (y >= 0) and (y <= self.playground_size_mm[1]):
+                self.cross_v_line.setVisible(True)
+                self.cross_h_line.setVisible(True)
+                self.cross_v_line.setPos(x)
+                self.cross_h_line.setPos(y)
+            else:
+                self.cross_v_line.setVisible(False)
+                self.cross_h_line.setVisible(False)
+
 
     def mouse_clicked(self, evt):
 

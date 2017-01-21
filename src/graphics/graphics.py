@@ -13,12 +13,10 @@ from ui.graphics import Ui_Graphics
 class Graphics(Ui_Graphics):
 
     params = [
-        {'name': 'General Parameters', 'type': 'group', 'children': [
-            {'name': 'Integer', 'type': 'int', 'value': 10},
-        ]},
-
         {'name': 'Table View', 'type': 'group', 'children': [
-            {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
+            {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle table-view visibility on/off"},
+            {'name': 'Grid', 'type': 'bool', 'value': True, 'tip': "Toggle grid on/off"},
+            {'name': 'CrossHair', 'type': 'bool', 'value': False, 'tip': "Toggle crosshair on/off"},
             {'name': 'Playground Image', 'type': 'group', 'children': [
                 {'name': 'File', 'type': 'str', 'value': os.path.dirname(__file__) + '/../rc/table_2017.png'},
                 {'name': 'Origin Coord. X', 'type': 'int', 'value': -40},
@@ -68,10 +66,10 @@ class Graphics(Ui_Graphics):
         # Load default settings
         self.update_table_playground()
 
-        # Some default states
-        self.table.add_robot_pos({'x': 0, 'y': 0, 'a': 0})
-        self.table.update_target_pos(1500, 1000)
-        self.table.set_crosshair_visible(False)
+        # Default states
+        self.actionPan.setChecked(True)
+        self.table.set_grid_visible(self.p.param('Table View').param('Grid').value())
+        self.table.set_crosshair_visible(self.p.param('Table View').param('CrossHair').value())
 
     def update_table_playground(self):
 
@@ -102,7 +100,8 @@ class Graphics(Ui_Graphics):
     def connect(self):
 
         # Toolbar
-        self.actionCursor.triggered.connect(self.action_cursor)
+        self.actionPan.triggered.connect(self.action_pan)
+        self.actionZoom.triggered.connect(self.action_zoom)
         self.actionGoto.triggered.connect(self.action_goto)
 
         # TableView
@@ -111,6 +110,12 @@ class Graphics(Ui_Graphics):
 
         self.p.param('Table View').param('Playground Image').param('Update').sigActivated.connect(
             self.update_table_playground)
+
+        self.p.param('Table View').param('Grid').sigValueChanged.connect(
+            lambda: self.table.set_grid_visible(self.p.param('Table View').param('Grid').value()))
+
+        self.p.param('Table View').param('CrossHair').sigValueChanged.connect(
+            lambda: self.table.set_crosshair_visible(self.p.param('Table View').param('CrossHair').value()))
 
         self.p.param('Table View').param('Robot').param('Visible').sigValueChanged.connect(
             lambda: self.table.set_robot_visible(self.p.param('Table View').param('Robot').param('Visible').value()))
@@ -172,22 +177,38 @@ class Graphics(Ui_Graphics):
                 if plots[j].value() == probe:
                     plots[j].add_data(time.time(), new_value)
 
-    def action_cursor(self, val):
+    def action_pan(self, val):
         if val:
+
+            if self.actionZoom.isChecked():
+                self.actionZoom.setChecked(False)
+
             if self.actionGoto.isChecked():
                 self.actionGoto.setChecked(False)
 
-        self.table.set_crosshair_visible(val)
+            self.table.viewbox.setMouseMode(pg.ViewBox.PanMode)
+
+    def action_zoom(self, val):
+        if val:
+
+            if self.actionPan.isChecked():
+                self.actionPan.setChecked(False)
+
+            if self.actionGoto.isChecked():
+                self.actionGoto.setChecked(False)
+
+            self.table.viewbox.setMouseMode(pg.ViewBox.RectMode)
 
     def action_goto(self, val):
         if val:
-            if self.actionCursor.isChecked():
-                self.actionCursor.setChecked(False)
+            if self.actionPan.isChecked():
+                self.actionPan.setChecked(False)
 
-        self.table.set_crosshair_visible(val)
+            if self.actionZoom.isChecked():
+                self.actionZoom.setChecked(False)
 
     def left_click_playground(self, x, y):
-        if self.actionCursor.isChecked():
+        if self.actionPan.isChecked():
             print('Mark', x, y)
 
         if self.actionGoto.isChecked():
