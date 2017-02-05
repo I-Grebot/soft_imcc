@@ -48,7 +48,7 @@ class IMCC(QMainWindow):
         self.connect()
 
         # Default states
-        self.ui.action_viewBootload.trigger() # Hidden
+        self.ui.actionViewBootload.trigger()
 
         # Variables for probe
         self.probe_list = list()
@@ -100,22 +100,35 @@ class IMCC(QMainWindow):
         self.graphics.table.update_target_pos(1500, 1000)
 
     def connect(self):
+
+        # Connect ToolBar items
         self.ui.actionConnect.triggered[bool].connect(self.connect_com)
+        self.ui.actionReset.triggered[bool].connect(self.reset)
+        self.ui.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
-        self.ui.action_viewConsole.triggered[bool].connect(self.console_dock.setVisible)
-        self.console_dock.visibilityChanged[bool].connect(self.ui.action_viewConsole.setChecked)
+        self.ui.actionViewConsole.triggered[bool].connect(self.console_dock.setVisible)
+        self.console_dock.visibilityChanged[bool].connect(self.ui.actionViewConsole.setChecked)
 
-        self.ui.action_viewBootload.triggered[bool].connect(self.stm32flash_dock.setVisible)
-        self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.action_viewBootload.setChecked)
+        self.ui.actionViewBootload.triggered[bool].connect(self.stm32flash_dock.setVisible)
+        self.stm32flash_dock.visibilityChanged[bool].connect(self.ui.actionViewBootload.setChecked)
+
+        self.ui.actionViewParameters.triggered[bool].connect(self.parameters_dock.setVisible)
+        self.parameters_dock.visibilityChanged[bool].connect(self.ui.actionViewParameters.setChecked)
+
+        self.ui.actionViewVariables.triggered[bool].connect(self.variables_dock.setVisible)
+        self.variables_dock.visibilityChanged[bool].connect(self.ui.actionViewVariables.setChecked)
+
+        self.ui.actionPan.triggered[bool].connect(self.pan)
+        self.ui.actionZoom.triggered[bool].connect(self.zoom)
+        self.ui.actionGoto.triggered[bool].connect(self.goto)
+        self.ui.actionViewSettings.triggered[bool].connect(self.graphics.widget_parameters.setVisible)
+        self.ui.actionViewGraphs.triggered[bool].connect(self.graphics.action_view_graphs)
 
         self.parameters.robot_setting_changed.connect(self.update_robot)
         self.parameters.playground_size_changed.connect(self.update_playground_size)
         self.parameters.bootloader_path_changed.connect(self.update_bootload_path)
 
         self.cli.data_available.connect(self.cli_process)
-
-        self.ui.actionReset.triggered[bool].connect(self.reset)
-        self.ui.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
         self.variables.variable_changed[str, str].connect(self.variable_updated)
@@ -158,6 +171,43 @@ class IMCC(QMainWindow):
     def reset(self):
         self.cli.flush()
         self.cli.send('sys reset\n')
+
+    def pan(self, val):
+        if val:
+
+            if self.ui.actionZoom.isChecked():
+                self.ui.actionZoom.setChecked(False)
+
+            if self.ui.actionGoto.isChecked():
+                self.ui.actionGoto.setChecked(False)
+
+            self.graphics.table.viewbox.setMouseMode(pg.ViewBox.PanMode)
+            self.graphics.goto_mode = False
+
+        self.graphics.pan_mode = val
+
+    def zoom(self, val):
+        if val:
+
+            if self.ui.actionPan.isChecked():
+                self.ui.actionPan.setChecked(False)
+
+            if self.ui.actionGoto.isChecked():
+                self.ui.actionGoto.setChecked(False)
+
+            self.graphics.table.viewbox.setMouseMode(pg.ViewBox.RectMode)
+
+    def goto(self, val):
+        if val:
+            if self.ui.actionPan.isChecked():
+                self.ui.actionPan.setChecked(False)
+
+            if self.ui.actionZoom.isChecked():
+                self.ui.actionZoom.setChecked(False)
+
+            self.graphics.pan_mode = False
+
+        self.graphics.goto_mode = val
 
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()

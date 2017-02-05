@@ -51,6 +51,8 @@ class Graphics(Ui_Graphics):
         self.probe_list = list()
         self.setup_table_view()
         self.setup_layout()
+        self.pan_mode = True
+        self.goto_mode = False
 
         # Bind slots
         self.connect()
@@ -67,7 +69,6 @@ class Graphics(Ui_Graphics):
         self.update_table_playground()
 
         # Default states
-        self.actionPan.setChecked(True)
         self.table.set_grid_visible(self.p.param('Table View').param('Grid').value())
         self.table.set_crosshair_visible(self.p.param('Table View').param('CrossHair').value())
 
@@ -98,13 +99,6 @@ class Graphics(Ui_Graphics):
         self.splitter.setStretchFactor(1, 0)
 
     def connect(self):
-
-        # Toolbar
-        self.actionPan.triggered.connect(self.action_pan)
-        self.actionZoom.triggered.connect(self.action_zoom)
-        self.actionGoto.triggered.connect(self.action_goto)
-        self.actionViewSettings.triggered.connect(self.widget_parameters.setVisible)
-        self.actionViewGraphs.triggered.connect(self.action_view_graphs)
 
         # TableView
         self.p.param('Table View').param('Visible').sigValueChanged.connect(
@@ -179,35 +173,7 @@ class Graphics(Ui_Graphics):
                 if plots[j].value() == probe:
                     plots[j].add_data(time.time(), new_value)
 
-    def action_pan(self, val):
-        if val:
 
-            if self.actionZoom.isChecked():
-                self.actionZoom.setChecked(False)
-
-            if self.actionGoto.isChecked():
-                self.actionGoto.setChecked(False)
-
-            self.table.viewbox.setMouseMode(pg.ViewBox.PanMode)
-
-    def action_zoom(self, val):
-        if val:
-
-            if self.actionPan.isChecked():
-                self.actionPan.setChecked(False)
-
-            if self.actionGoto.isChecked():
-                self.actionGoto.setChecked(False)
-
-            self.table.viewbox.setMouseMode(pg.ViewBox.RectMode)
-
-    def action_goto(self, val):
-        if val:
-            if self.actionPan.isChecked():
-                self.actionPan.setChecked(False)
-
-            if self.actionZoom.isChecked():
-                self.actionZoom.setChecked(False)
 
     # Show / Hide all graphs
     def action_view_graphs(self, state):
@@ -224,10 +190,10 @@ class Graphics(Ui_Graphics):
                 windows[i].update_visibility()
 
     def left_click_playground(self, x, y):
-        if self.actionPan.isChecked():
+        if self.pan_mode:
             print('Mark', x, y)
 
-        if self.actionGoto.isChecked():
+        if self.goto_mode:
             print('Goto', x, y)
 
 
