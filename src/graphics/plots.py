@@ -36,6 +36,7 @@ class PlotParameter(pTypes.GroupParameter):
 
         # Holder for the plotDataItem
         self.widget = pg.PlotWidget()
+        self.legend = pg.LegendItem()
         self.plot = pg.PlotDataItem()
 
         # Slots Connections
@@ -48,8 +49,9 @@ class PlotParameter(pTypes.GroupParameter):
     def get_plot(self):
         return self.plot
 
-    def setup_plot(self, widget):
+    def setup_plot(self, widget, legend):
         self.widget = widget
+        self.legend = legend
         self.plot = widget.plot(pen=self.pen, name=self.value())
 
     def update_color(self):
@@ -69,6 +71,7 @@ class PlotParameter(pTypes.GroupParameter):
 
     def remove_plot(self):
         self.widget.removeItem(self.plot)
+        self.legend.removeItem(self.value())
 
     def add_data(self, timestamp, value):
         self.data.append({'x': timestamp, 'y': value})
@@ -96,7 +99,7 @@ class PlotWindowParameter(pTypes.GroupParameter):
         self.dock = Dock(self.name(), closable=False, autoOrientation=False)
         self.dock_area = DockArea()
         self.plot_widget = pg.PlotWidget(axisItems={'bottom': TimeAxisItem(orientation='bottom')})
-        self.plot_widget.addLegend()
+        self.legend = self.plot_widget.addLegend()
 
         self.update_grid()
         self.dock.addWidget(self.plot_widget) # Separate plot_widget per dock todo
@@ -109,10 +112,13 @@ class PlotWindowParameter(pTypes.GroupParameter):
 
     def addNew(self, typ):
         nb_plots = len(self.childs)-2 # 2 statics
-        new_kid = self.addChild(PlotParameter(name='Plot %s' %typ, value=typ, removable=True, renamable=False),
-                                autoIncrementName=True)
-        new_kid.param('Color').setValue(self.COLORS[nb_plots % len(self.COLORS)])
-        new_kid.setup_plot(self.plot_widget)
+        try:
+            new_kid = self.addChild(PlotParameter(name='Plot %s' %typ, value=typ, removable=True, renamable=False),
+                                    autoIncrementName=False)
+            new_kid.param('Color').setValue(self.COLORS[nb_plots % len(self.COLORS)])
+            new_kid.setup_plot(self.plot_widget, self.legend)
+        except Exception as err:
+            print('Error while trying to add a plot: ', err)
 
     def set_probe_list(self, probe_list):
         probe_list_str = list()

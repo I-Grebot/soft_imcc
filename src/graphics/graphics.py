@@ -103,6 +103,8 @@ class Graphics(Ui_Graphics):
         self.actionPan.triggered.connect(self.action_pan)
         self.actionZoom.triggered.connect(self.action_zoom)
         self.actionGoto.triggered.connect(self.action_goto)
+        self.actionViewSettings.triggered.connect(self.widget_parameters.setVisible)
+        self.actionViewGraphs.triggered.connect(self.action_view_graphs)
 
         # TableView
         self.p.param('Table View').param('Visible').sigValueChanged.connect(
@@ -206,6 +208,20 @@ class Graphics(Ui_Graphics):
 
             if self.actionZoom.isChecked():
                 self.actionZoom.setChecked(False)
+
+    # Show / Hide all graphs
+    def action_view_graphs(self, state):
+
+        windows = self.p.param('Plots').children()
+        for i in range(len(windows)):
+
+            # Force to hide
+            if state is False:
+                windows[i].dock.setVisible(False)
+
+            # Restore parameter's visibility
+            else:
+                windows[i].update_visibility()
 
     def left_click_playground(self, x, y):
         if self.actionPan.isChecked():

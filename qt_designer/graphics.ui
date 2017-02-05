@@ -72,6 +72,9 @@
    <addaction name="actionColor"/>
    <addaction name="actionRestart"/>
    <addaction name="actionStartPause"/>
+   <addaction name="separator"/>
+   <addaction name="actionViewSettings"/>
+   <addaction name="actionViewGraphs"/>
   </widget>
   <action name="actionPan">
    <property name="checkable">
@@ -165,6 +168,42 @@
    </property>
    <property name="toolTip">
     <string>Start or pause match sequence</string>
+   </property>
+  </action>
+  <action name="actionViewSettings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/cog.png</normaloff>:/icons/silk/cog.png</iconset>
+   </property>
+   <property name="text">
+    <string>ViewSettings</string>
+   </property>
+   <property name="toolTip">
+    <string>Show / Hide graphics settings</string>
+   </property>
+  </action>
+  <action name="actionViewGraphs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/chart_curve.png</normaloff>:/icons/silk/chart_curve.png</iconset>
+   </property>
+   <property name="text">
+    <string>ViewGraphs</string>
+   </property>
+   <property name="toolTip">
+    <string>Show / Hide graphics windows</string>
    </property>
   </action>
  </widget>
