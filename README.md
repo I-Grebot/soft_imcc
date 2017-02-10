@@ -7,3 +7,7 @@
  * `pip3 install pillow`
  * `pip3 install pyqtgraph`
  * `pip3 install pyserial`
+ 
+ ## Distributable
+ 
+ * `pip3 install cx_Freeze`
