@@ -116,5 +116,9 @@ class Parameters(ParameterTree):
 
     def update_port_description(self):
         port_name = str(self.p.param("Communication").param("Port").value())
-        port = list(serial.tools.list_ports.grep(port_name))[0]
-        self.p.param("Communication").param("Description").setValue(port.description)
+        ports_list = list(serial.tools.list_ports.grep(port_name))
+
+        # Fetch a unique port
+        if len(ports_list) == 1:
+            port = ports_list[0]
+            self.p.param("Communication").param("Description").setValue(port.description)
