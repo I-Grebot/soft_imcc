@@ -10,7 +10,9 @@ from .plots import *
 
 from ui.graphics import Ui_Graphics
 
-class Graphics(Ui_Graphics):
+class Graphics(Ui_Graphics, QObject):
+
+    goto_clicked = pyqtSignal([int, int], name='gotoClicked')
 
     params = [
         {'name': 'Table View', 'type': 'group', 'children': [
@@ -34,6 +36,9 @@ class Graphics(Ui_Graphics):
     ]
 
     def __init__(self):
+
+        super(Graphics, self).__init__()
+
         self.win = QMainWindow()
         self.setupUi(self.win)
 
@@ -194,7 +199,5 @@ class Graphics(Ui_Graphics):
             print('Mark', x, y)
 
         if self.goto_mode:
-            print('Goto', x, y)
-
-
-
+            self.table.update_target_pos(x, y)
+            self.goto_clicked.emit(x, y)

@@ -118,9 +118,10 @@ class IMCC(QMainWindow):
         self.ui.actionViewVariables.triggered[bool].connect(self.variables_dock.setVisible)
         self.variables_dock.visibilityChanged[bool].connect(self.ui.actionViewVariables.setChecked)
 
-        self.ui.actionPan.triggered[bool].connect(self.pan)
-        self.ui.actionZoom.triggered[bool].connect(self.zoom)
-        self.ui.actionGoto.triggered[bool].connect(self.goto)
+        self.ui.actionPan.triggered[bool].connect(self.pan_mode)
+        self.ui.actionZoom.triggered[bool].connect(self.zoom_mode)
+        self.ui.actionGoto.triggered[bool].connect(self.goto_mode)
+        self.ui.actionStop.triggered.connect(self.stop)
         self.ui.actionViewSettings.triggered[bool].connect(self.graphics.widget_parameters.setVisible)
         self.ui.actionViewGraphs.triggered[bool].connect(self.graphics.action_view_graphs)
 
@@ -132,6 +133,8 @@ class IMCC(QMainWindow):
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
         self.variables.variable_changed[str, str].connect(self.variable_updated)
+
+        self.graphics.goto_clicked[int, int].connect(self.goto)
 
     def set_status_bar_message(self, str):
         self.ui.statusbar.showMessage(str)
@@ -172,7 +175,7 @@ class IMCC(QMainWindow):
         self.cli.flush()
         self.cli.send('sys reset\n')
 
-    def pan(self, val):
+    def pan_mode(self, val):
         if val:
 
             if self.ui.actionZoom.isChecked():
@@ -186,7 +189,7 @@ class IMCC(QMainWindow):
 
         self.graphics.pan_mode = val
 
-    def zoom(self, val):
+    def zoom_mode(self, val):
         if val:
 
             if self.ui.actionPan.isChecked():
@@ -197,7 +200,7 @@ class IMCC(QMainWindow):
 
             self.graphics.table.viewbox.setMouseMode(pg.ViewBox.RectMode)
 
-    def goto(self, val):
+    def goto_mode(self, val):
         if val:
             if self.ui.actionPan.isChecked():
                 self.ui.actionPan.setChecked(False)
@@ -208,6 +211,14 @@ class IMCC(QMainWindow):
             self.graphics.pan_mode = False
 
         self.graphics.goto_mode = val
+
+    def goto(self, x, y):
+        print('Goto %d %d' %(x, y))
+        self.cli.send('mot goto %d %d\n' % (x, y))
+
+    def stop(self):
+        print('Stopping motion')
+        self.cli.send('mot stop\n')
 
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()

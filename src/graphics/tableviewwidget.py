@@ -247,21 +247,17 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
             "Y = %+05d" % (x, y))
 
         # Update crosshair drawing if there are within image bounds
-        if self.crosshair_visible:
-            if (x >= 0) and (x <= self.playground_size_mm[0]) and (y >= 0) and (y <= self.playground_size_mm[1]):
-                self.cross_v_line.setVisible(True)
-                self.cross_h_line.setVisible(True)
-                self.cross_v_line.setPos(x)
-                self.cross_h_line.setPos(y)
-            else:
-                self.cross_v_line.setVisible(False)
-                self.cross_h_line.setVisible(False)
+        # Even if not visible, this needs to be updated because the crosshair is used for X;Y position of the mouse
+        if (x >= 0) and (x <= self.playground_size_mm[0]) and (y >= 0) and (y <= self.playground_size_mm[1]):
+            self.cross_v_line.setPos(x)
+            self.cross_h_line.setPos(y)
+
+        # Display it only if requested
+        self.cross_v_line.setVisible(self.crosshair_visible)
+        self.cross_h_line.setVisible(self.crosshair_visible)
 
 
     def mouse_clicked(self, evt):
-
-        # pos = evt[0].pos()
-        # mouse_point = self.viewbox.mapToView(pos)
 
         # Not very elegant but easy to use
         x = int(self.cross_v_line.getPos()[0])
