@@ -8,7 +8,7 @@ from PyQt5.QtCore import QThread
 from imcc import IMCC
 from console import ConsoleStream, ConsoleReceiver
 
-if __name__ == '__main__':
+if "__main__" in __name__:
 
 
     # Create application and initialize all windows

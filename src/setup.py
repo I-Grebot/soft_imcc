@@ -10,18 +10,22 @@ from cx_Freeze import setup, Executable
 
 # Paths
 path = sys.path + ["ui", "graphics"]
+python_dir = os.path.split(sys.executable)[0]
+
+# Environment
+os.environ['TCL_LIBRARY'] = python_dir + "\\tcl\\tcl8.6"
+os.environ['TK_LIBRARY'] = python_dir + "\\tcl\\tk8.6"
 
 # Modules inclusions / exclusions
-includes = []
-
+includes = ['numpy.core._methods', 'numpy.lib.format']
 excludes = []
-
-packages = ['os', 'threading','queue',
-            'numpy', 'PIL', 'serial',
-            'PyQt5', 'pyqtgraph']
+packages = ['numpy', 'PIL', 'serial', 'pyqtgraph']
 
 # Include files
-includefiles = ['rc/imcc.png']
+includefiles = [# README.txt CHANGELOG.txt
+                'rc/imcc.png',
+                ('rc/table_2017.png', 'rc/table_2017.png')
+                ]
 
 if sys.platform == "win32":
     pass
@@ -72,7 +76,12 @@ bin_icon = None
 if sys.platform == "win32":
     bin_icon = 'rc/imcc.ico'
 
+# -----------------------------------------------------------------------------
+# Targets
+# -----------------------------------------------------------------------------
+
 target1 = Executable(
+    targetName="IMCC.exe",
     script="main.py",
     base=base,
     icon=bin_icon

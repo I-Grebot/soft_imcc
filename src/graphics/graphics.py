@@ -20,7 +20,7 @@ class Graphics(Ui_Graphics, QObject):
             {'name': 'Grid', 'type': 'bool', 'value': True, 'tip': "Toggle grid on/off"},
             {'name': 'CrossHair', 'type': 'bool', 'value': False, 'tip': "Toggle crosshair on/off"},
             {'name': 'Playground Image', 'type': 'group', 'children': [
-                {'name': 'File', 'type': 'str', 'value': os.path.dirname(__file__) + '/../rc/table_2017.png'},
+                {'name': 'File', 'type': 'str', 'value': 'rc/table_2017.png'},
                 {'name': 'Origin Coord. X', 'type': 'int', 'value': -40},
                 {'name': 'Origin Coord. Y', 'type': 'int', 'value': -40},
                 {'name': 'Scaling Factor', 'type': 'float', 'value': 3000/1146, 'decimals': 4, 'suffix': 'px/mm'},
