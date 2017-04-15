@@ -24,6 +24,7 @@ from stm32flash import Stm32Flash
 from console import Console
 from parameters import Parameters
 from variables import Variables
+from digital_servos import DigitalServos
 from cli import Cli
 from robot import Robot
 from graphics.graphics import Graphics
@@ -88,6 +89,12 @@ class IMCC(QMainWindow):
         self.variables = Variables(self.variables_dock, self.cli)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.variables_dock)
 
+        # Add the DigitalServos dock
+        self.digital_servos_dock = QDockWidget()
+        self.digital_servos_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        self.digital_servos = DigitalServos(self.digital_servos_dock, self.cli)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.digital_servos_dock)
+
         # Create and place the main central widget
         self.graphics = Graphics()
         self.setCentralWidget(self.graphics.win)
@@ -118,6 +125,8 @@ class IMCC(QMainWindow):
         self.ui.actionViewVariables.triggered[bool].connect(self.variables_dock.setVisible)
         self.variables_dock.visibilityChanged[bool].connect(self.ui.actionViewVariables.setChecked)
 
+        # DIGITAL SERVOS TODO
+
         self.ui.actionPan.triggered[bool].connect(self.pan_mode)
         self.ui.actionZoom.triggered[bool].connect(self.zoom_mode)
         self.ui.actionGoto.triggered[bool].connect(self.goto_mode)
@@ -133,6 +142,8 @@ class IMCC(QMainWindow):
 
         self.variables.probe_list_changed.connect(self.probe_list_update)
         self.variables.variable_changed[str, str].connect(self.variable_updated)
+
+        self.digital_servos.register_changed[int, int, str, str, str].connect(self.digital_servo_register_updated)
 
         self.graphics.goto_clicked[int, int].connect(self.goto)
 
@@ -275,6 +286,11 @@ class IMCC(QMainWindow):
         set_str = 'set ' + name + ' ' + value + '\n'
         self.cli.send(set_str)
 
+    @pyqtSlot(int, int, str, str, str)
+    def digital_servo_register_updated(self, itf, id, address, size, value):
+        write_str = 'dsv write %d %d %s %s %s\n' %(itf, id, address, size, value)
+        self.cli.send(write_str)
+
     @pyqtSlot()
     def cli_process(self):
 
@@ -307,7 +323,7 @@ class IMCC(QMainWindow):
                 if len(values) == len(self.probe_list):
                     for i in range(len(values)):
                         var = self.probe_list[i]['name']
-                        val = int(values[i])
+                        val = int(values[i])  # others like float not yet supported
 
                         self.graphics.set_probe_value(var, val)
 
@@ -343,6 +359,54 @@ class IMCC(QMainWindow):
                            'value': var_items[5],
                            'unit': var_items[4]}
                     self.variables.add_item(var)
+
+                # Some triggers
+                name = var_items[3]
+                value = var_items[5]
+
+                if name == self.parameters.get_digital_servos_nb_channels_variable():
+                    self.digital_servos.refresh_interfaces_list(int(value))
+
+            elif ret_str.startswith('[DSV] [SCAN]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[12:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9_./ ]+', '', ret_str)
+
+                # Split items, add them to the digital servos list
+                servo_items = ret_str.split(' ')
+                if len(servo_items) == 4:
+                    servo = {'itf': servo_items[0],
+                             'id': servo_items[1],
+                             'model_name': servo_items[2],
+                             'status': servo_items[3]}
+                    self.digital_servos.add_servo(servo)
+
+            elif ret_str.startswith('[DSV] [DUMP]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[12:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9_./ ]+', '', ret_str)
+
+                # Split items, add them to the digital servos list
+                register_items = ret_str.split(' ')
+                if len(register_items) == 8:
+                    register = {'itf': register_items[0],
+                                'id': register_items[1],
+                                'area': register_items[2],
+                                'access': register_items[3],
+                                'address': register_items[4],
+                                'size': register_items[5],
+                                'name': register_items[6],
+                                'value': register_items[7]
+                            }
+                    self.digital_servos.add_register(register)
 
             # Default: print string
             else:

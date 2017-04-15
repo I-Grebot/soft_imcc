@@ -38,6 +38,9 @@ class Parameters(ParameterTree):
             {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'},
             {'name': 'Radius', 'type': 'int', 'value': 150, 'int': True, 'suffix': 'mm'}
         ]},
+        {'name': 'Digital Servos', 'type': 'group', 'children': [
+            {'name': 'NB. Channels Variable', 'type': 'str', 'value': 'dsv.nb_channels'},
+        ]},
         {'name': 'Bootloader', 'type': 'group', 'children': [
             {'name': 'Binary path', 'type': 'str', 'value': '..\\bin\\stm32flash.exe'},
         ]}
@@ -93,6 +96,9 @@ class Parameters(ParameterTree):
 
     def get_robot_radius(self):
         return self.p.param("Robot").param("Radius").value()
+
+    def get_digital_servos_nb_channels_variable(self):
+        return self.p.param("Digital Servos").param("NB. Channels Variable").value()
 
     def get_serial_port(self):
         return self.p.param("Communication").param("Port").value()

@@ -20,7 +20,8 @@ FORMS += \
     graphics.ui \
     imcc.ui \
     stm32flash.ui \
-    variables.ui
+    variables.ui \
+    digital_servos.ui
 
 RESOURCES += \
     imcc.qrc
