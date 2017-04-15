@@ -80,24 +80,48 @@ class DigitalServos(QObject, Ui_DigitalServos):
             self.comboBox_interfaces.addItem("%d" % itf, userData=itf)
 
     def get_current_interface(self):
-        return int(self.comboBox_interfaces.currentData())
+        data = int(self.comboBox_interfaces.currentData())
+
+        if data >= 0:
+            return data
+        else:
+            return -1
 
     def get_current_servo_id(self):
-        return 20
+        index = self.tableWidget_servos.selectedIndexes()
+
+        if len(index) == 1:
+            return int(self.tableWidget_servos.item(index[0].row(), self.COLUMN_SERVO_ID).text())
+        else:
+            return -1
 
     def scan(self):
         self.clear_servos_table()
-        self.cli.send('dsv scan %u\n' % self.get_current_interface())
+        self.clear_registers_table()
+
+        itf = self.get_current_interface()
+
+        if itf != -1:
+            self.cli.send('dsv scan %u\n' % itf)
 
     def ping(self):
-        self.cli.send('dsv ping %u %u\n' % (self.get_current_interface(), self.get_current_servo_id()))
+        itf = self.get_current_interface()
+        id = self.get_current_servo_id()
+
+        if itf != -1 and id != -1:
+            self.cli.send('dsv ping %u %u\n' % (itf, id))
 
     def reset(self):
         print('RESET')
 
     def dump(self):
+        itf = self.get_current_interface()
+        id = self.get_current_servo_id()
+
         self.clear_registers_table()
-        self.cli.send('dsv dump %u %u\n' % (self.get_current_interface(), self.get_current_servo_id()))
+
+        if itf != -1 and id != -1:
+            self.cli.send('dsv dump %u %u\n' % (itf, id))
 
     def add_servo(self, item):
 
@@ -124,6 +148,10 @@ class DigitalServos(QObject, Ui_DigitalServos):
 
         item_status.setFlags(flags)
         item_status.setForeground(item_color)
+
+        # Always resize to content at the end
+        self.tableWidget_servos.resizeColumnsToContents()
+        self.tableWidget_servos.resizeRowsToContents()
 
     def add_register(self, item):
 
@@ -174,6 +202,10 @@ class DigitalServos(QObject, Ui_DigitalServos):
         self.tableWidget_registers.blockSignals(True)
         self.tableWidget_registers.setItem(row, self.COLUMN_REGISTER_VALUE, item_value)
         self.tableWidget_registers.blockSignals(False)
+
+        # Always resize to content at the end
+        self.tableWidget_registers.resizeColumnsToContents()
+        self.tableWidget_registers.resizeRowsToContents()
 
     # -------------------------------------------------------------------------
     # Slots & Binds

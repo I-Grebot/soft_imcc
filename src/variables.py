@@ -122,6 +122,9 @@ class Variables(QObject, Ui_Variables):
         item_probe.setCheckState(Qt.Unchecked)
         self.tableWidget_variables.setItem(row, self.COLUMN_PROBE, item_probe)
 
+        # Always resize to content at the end
+        self.tableWidget_variables.resizeColumnsToContents()
+        self.tableWidget_variables.resizeRowsToContents()
 
     def get_probe_list(self):
 

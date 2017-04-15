@@ -66,6 +66,9 @@
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
          <property name="columnCount">
           <number>3</number>
          </property>
@@ -74,6 +77,12 @@
          </attribute>
          <attribute name="horizontalHeaderMinimumSectionSize">
           <number>30</number>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>15</number>
+         </attribute>
+         <attribute name="verticalHeaderMinimumSectionSize">
+          <number>10</number>
          </attribute>
          <column>
           <property name="text">
@@ -150,6 +159,9 @@
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectItems</enum>
          </property>
@@ -161,6 +173,12 @@
          </attribute>
          <attribute name="horizontalHeaderMinimumSectionSize">
           <number>30</number>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>15</number>
+         </attribute>
+         <attribute name="verticalHeaderMinimumSectionSize">
+          <number>10</number>
          </attribute>
          <column>
           <property name="text">
