@@ -5,6 +5,7 @@
 # Resource files (that are then compiled)
 qt_designer/images
 qt_designer/silk
+qt_designer/fugue
 
 # QTDesigner files
 *.ui~

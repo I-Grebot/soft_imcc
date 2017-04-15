@@ -29,7 +29,31 @@ class Parameters(ParameterTree):
          ]},
         {'name': 'Rules', 'type': 'group', 'children': [
             {'name': 'Table Width', 'type': 'int', 'value': 3000, 'int': True, 'suffix': 'mm'},
-            {'name': 'Table Height', 'type': 'int', 'value': 2000, 'int': True, 'suffix': 'mm'}
+            {'name': 'Table Height', 'type': 'int', 'value': 2000, 'int': True, 'suffix': 'mm'},
+            {'name': 'Color Team 1', 'type': 'list', 'values':
+                {"Red" : "red",
+                 "Blue": "blue",
+                 "Green": "green",
+                 "Black": "black",
+                 "Gray": "gray",
+                 "Pink": "pink",
+                 "Purple": "purple",
+                 "White": "white",
+                 "Yellow": "yellow"
+                 }
+            , 'value': "blue"},
+            {'name': 'Color Team 2', 'type': 'list', 'values':
+                {"Red": "red",
+                 "Blue": "blue",
+                 "Green": "green",
+                 "Black": "black",
+                 "Gray": "gray",
+                 "Pink": "pink",
+                 "Purple": "purple",
+                 "White": "white",
+                 "Yellow": "yellow"
+                 }
+                , 'value': "yellow"},
         ]},
         {'name': 'Robot', 'type': 'group', 'children': [
             {'name': 'Update data', 'type': 'bool', 'value': True, 'tip': "Update table-view data when probing"},
@@ -81,6 +105,12 @@ class Parameters(ParameterTree):
 
     def get_playground_height(self):
         return self.p.param("Rules").param("Table Height").value()
+
+    def get_color_team_1(self):
+        return self.p.param("Rules").param("Color Team 1").value()
+
+    def get_color_team_2(self):
+        return self.p.param("Rules").param("Color Team 2").value()
 
     def get_robot_update_data(self):
         return self.p.param("Robot").param("Update data").value()

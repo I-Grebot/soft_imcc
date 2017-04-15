@@ -53,6 +53,15 @@
    <property name="allowedAreas">
     <set>Qt::NoToolBarArea</set>
    </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
    <property name="floatable">
     <bool>false</bool>
    </property>
@@ -69,6 +78,9 @@
    <addaction name="actionPan"/>
    <addaction name="actionZoom"/>
    <addaction name="separator"/>
+   <addaction name="actionPower_ON"/>
+   <addaction name="actionPower_OFF"/>
+   <addaction name="separator"/>
    <addaction name="actionGoto"/>
    <addaction name="actionStop"/>
    <addaction name="separator"/>
@@ -80,6 +92,7 @@
    <addaction name="actionViewBootload"/>
    <addaction name="actionViewParameters"/>
    <addaction name="actionViewVariables"/>
+   <addaction name="actionViewDigital_Servos"/>
    <addaction name="actionViewSettings"/>
    <addaction name="actionViewGraphs"/>
   </widget>
@@ -100,18 +113,21 @@
    </property>
   </action>
   <action name="actionConfigLoad">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/fugue/icons/folder-open.png</normaloff>:/icons/fugue/icons/folder-open.png</iconset>
+   </property>
    <property name="text">
     <string>Load</string>
    </property>
   </action>
   <action name="actionConfigSave">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/fugue/icons/disk-black.png</normaloff>:/icons/fugue/icons/disk-black.png</iconset>
+   </property>
    <property name="text">
     <string>Save</string>
-   </property>
-  </action>
-  <action name="actionOenConfiguration">
-   <property name="text">
-    <string>Configuration</string>
    </property>
   </action>
   <action name="actionViewConsole">
@@ -261,7 +277,7 @@
   <action name="actionStop">
    <property name="icon">
     <iconset resource="imcc.qrc">
-     <normaloff>:/icons/silk/cross.png</normaloff>:/icons/silk/cross.png</iconset>
+     <normaloff>:/icons/fugue/icons/minus-circle.png</normaloff>:/icons/fugue/icons/minus-circle.png</iconset>
    </property>
    <property name="text">
     <string>Stop</string>
@@ -271,9 +287,15 @@
    </property>
   </action>
   <action name="actionColor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="imcc.qrc">
-     <normaloff>:/icons/silk/tag_blue.png</normaloff>:/icons/silk/tag_blue.png</iconset>
+     <normaloff>:/icons/fugue/icons/flag-blue.png</normaloff>:/icons/fugue/icons/flag-blue.png</iconset>
    </property>
    <property name="text">
     <string>Color</string>
@@ -344,6 +366,45 @@
    </property>
    <property name="toolTip">
     <string>Show / Hide graphics windows</string>
+   </property>
+  </action>
+  <action name="actionViewDigital_Servos">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/controller.png</normaloff>:/icons/silk/controller.png</iconset>
+   </property>
+   <property name="text">
+    <string>Digital Servos</string>
+   </property>
+   <property name="toolTip">
+    <string>Show / Hide Digital Servos panel</string>
+   </property>
+  </action>
+  <action name="actionPower_ON">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/fugue/icons/tick-circle-frame.png</normaloff>:/icons/fugue/icons/tick-circle-frame.png</iconset>
+   </property>
+   <property name="text">
+    <string>Power ON</string>
+   </property>
+  </action>
+  <action name="actionPower_OFF">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/fugue/icons/exclamation-red-frame.png</normaloff>:/icons/fugue/icons/exclamation-red-frame.png</iconset>
+   </property>
+   <property name="text">
+    <string>Power OFF</string>
+   </property>
+   <property name="toolTip">
+    <string>Power OFF</string>
    </property>
   </action>
  </widget>

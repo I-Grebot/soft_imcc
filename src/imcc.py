@@ -7,7 +7,7 @@ import re
 # Qt Libraries
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QMainWindow, QDockWidget, QTabWidget, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import QMainWindow, QDockWidget, QTabWidget, QVBoxLayout, QGridLayout, QLabel, QComboBox
 
 # PyQtGraph
 import pyqtgraph as pg
@@ -113,6 +113,11 @@ class IMCC(QMainWindow):
         self.ui.actionReset.triggered[bool].connect(self.reset)
         self.ui.actionProbe.triggered[bool].connect(self.probe_start_stop)
 
+        self.ui.actionPower_ON.triggered[bool].connect(self.power_on)
+        self.ui.actionPower_OFF.triggered[bool].connect(self.power_off)
+
+        self.ui.actionColor.triggered[bool].connect(self.set_team_color)
+
         self.ui.actionViewConsole.triggered[bool].connect(self.console_dock.setVisible)
         self.console_dock.visibilityChanged[bool].connect(self.ui.actionViewConsole.setChecked)
 
@@ -125,7 +130,8 @@ class IMCC(QMainWindow):
         self.ui.actionViewVariables.triggered[bool].connect(self.variables_dock.setVisible)
         self.variables_dock.visibilityChanged[bool].connect(self.ui.actionViewVariables.setChecked)
 
-        # DIGITAL SERVOS TODO
+        self.ui.actionViewDigital_Servos.triggered[bool].connect(self.digital_servos_dock.setVisible)
+        self.digital_servos_dock.visibilityChanged[bool].connect(self.ui.actionViewDigital_Servos.setChecked)
 
         self.ui.actionPan.triggered[bool].connect(self.pan_mode)
         self.ui.actionZoom.triggered[bool].connect(self.zoom_mode)
@@ -230,6 +236,31 @@ class IMCC(QMainWindow):
     def stop(self):
         print('Stopping motion')
         self.cli.send('mot stop\n')
+
+    def power_on(self):
+        print('Power all ON')
+        self.cli.send('pow all on\n')
+
+    def power_off(self):
+        print('Power all OFF')
+        self.cli.send('pow all off\n')
+
+    def set_team_color(self, value):
+
+        # Arbitrary: team 1 when not checked
+        if value:
+            team_color_str = self.parameters.get_color_team_2()
+        else:
+            team_color_str = self.parameters.get_color_team_1()
+
+        icon_team = QtGui.QIcon()
+        icon_team.addPixmap(QtGui.QPixmap(":/icons/fugue/icons/flag-" + team_color_str + ".png"),
+                            QtGui.QIcon.Normal,
+                            QtGui.QIcon.Off)
+
+        self.ui.actionColor.setIcon(icon_team)
+
+        print("Setting team color to " + team_color_str)
 
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()
