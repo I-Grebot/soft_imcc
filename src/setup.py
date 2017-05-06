@@ -93,7 +93,7 @@ target1 = Executable(
 
 setup(
     name="soft_imcc",
-    version="1.00",
+    version="1.0.0",
     description="IgreBot 's Mission Control Center",
     author="Bebop35",
     options={"build_exe": options},

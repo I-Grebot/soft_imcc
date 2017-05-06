@@ -103,8 +103,6 @@ class IMCC(QMainWindow):
         self.update_playground_size()
         self.update_robot()
 
-        self.graphics.table.add_robot_pos({'x': 0, 'y': 0, 'a': 0})
-        self.graphics.table.update_target_pos(1500, 1000)
 
     def connect(self):
 
@@ -439,10 +437,31 @@ class IMCC(QMainWindow):
                             }
                     self.digital_servos.add_register(register)
 
+            elif ret_str.startswith('[PHYS] [POLY]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[13:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9_./ ;]+', '', ret_str)
+
+                # Split items
+                poly_items = ret_str.split(' ')
+                poly_idx = poly_items[0]
+                poly_items.pop(0)
+                x = []
+                y = []
+                for point_str in poly_items:
+                    point_items = point_str.split(';')
+                    x.append(int(point_items[0]))
+                    y.append(int(point_items[1]))
+
+                self.graphics.table.add_poly({'x': x, 'y': y})
+
             # Default: print string
             else:
                 self.console.append_text(ret_str)
 
         except:
             pass
-

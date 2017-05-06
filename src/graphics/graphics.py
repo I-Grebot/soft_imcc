@@ -21,15 +21,27 @@ class Graphics(Ui_Graphics, QObject):
             {'name': 'CrossHair', 'type': 'bool', 'value': False, 'tip': "Toggle crosshair on/off"},
             {'name': 'Playground Image', 'type': 'group', 'children': [
                 {'name': 'File', 'type': 'str', 'value': 'rc/table_2017.png'},
-                {'name': 'Origin Coord. X', 'type': 'int', 'value': -40},
-                {'name': 'Origin Coord. Y', 'type': 'int', 'value': -40},
+                {'name': 'Origin Coord. X', 'type': 'int', 'value': -41},
+                {'name': 'Origin Coord. Y', 'type': 'int', 'value': -87},
                 {'name': 'Scaling Factor', 'type': 'float', 'value': 3000/1146, 'decimals': 4, 'suffix': 'px/mm'},
                 {'name': 'Update', 'type': 'action'}
             ]},
+
             {'name': 'Robot', 'type': 'group', 'children': [
                 {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
                 {'name': 'History', 'type': 'bool', 'value': True, 'tip': "Toggle history on/off"},
                 {'name': 'Color', 'type': 'color', 'value': (0, 0, 200, 150), 'tip': "Foreground color"}
+            ]},
+
+            {'name': 'Points Of Interest', 'type': 'group', 'children': [
+                {'name': 'Visible', 'type': 'bool', 'value': True, 'tip': "Toggle visibility on/off"},
+                {'name': 'Size', 'type': 'int', 'value': 50},
+                {'name': 'Color', 'type': 'color', 'value': (200, 0, 0, 150), 'tip': "Foreground color"}
+            ]},
+
+            {'name': 'Path-finder', 'type': 'group', 'children': [
+                {'name': 'Polygons visible', 'type': 'bool', 'value': True, 'tip': "Toggle PF polygons visibility on/off"},
+                {'name': 'Paths visible', 'type': 'bool', 'value': True, 'tip': "Toggle PF polygons visibility on/off"},
             ]},
         ]},
         PlotsGroup(name="Plots"),
@@ -76,6 +88,14 @@ class Graphics(Ui_Graphics, QObject):
         # Default states
         self.table.set_grid_visible(self.p.param('Table View').param('Grid').value())
         self.table.set_crosshair_visible(self.p.param('Table View').param('CrossHair').value())
+
+        self.table.set_robot_visible(self.p.param('Table View').param('Robot').param('Visible').value())
+        self.table.set_robot_history_visible(self.p.param('Table View').param('Robot').param('History').value())
+        self.table.set_robot_color(self.p.param('Table View').param('Robot').param('Color').value())
+
+        self.table.set_poi_visible(self.p.param('Table View').param('Points Of Interest').param('Visible').value())
+        self.table.set_poi_color(self.p.param('Table View').param('Points Of Interest').param('Color').value())
+        self.table.set_poi_size(self.p.param('Table View').param('Points Of Interest').param('Size').value())
 
     def update_table_playground(self):
 
@@ -126,6 +146,15 @@ class Graphics(Ui_Graphics, QObject):
 
         self.p.param('Table View').param('Robot').param('Color').sigValueChanged.connect(
             lambda: self.table.set_robot_color(self.p.param('Table View').param('Robot').param('Color').value()))
+
+        self.p.param('Table View').param('Points Of Interest').param('Visible').sigValueChanged.connect(
+            lambda: self.table.set_poi_visible(self.p.param('Table View').param('Points Of Interest').param('Visible').value()))
+
+        self.p.param('Table View').param('Points Of Interest').param('Color').sigValueChanged.connect(
+            lambda: self.table.set_poi_color(self.p.param('Table View').param('Points Of Interest').param('Color').value()))
+
+        self.p.param('Table View').param('Points Of Interest').param('Size').sigValueChanged.connect(
+            lambda: self.table.set_poi_size(self.p.param('Table View').param('Points Of Interest').param('Size').value()))
 
         self.table.left_click_playground[int, int].connect(self.left_click_playground)
 

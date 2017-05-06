@@ -26,6 +26,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.viewbox = self.addViewBox()
         self.viewbox.setAspectLocked(True)
         self.viewbox.disableAutoRange()
+        self.viewbox.invertY(True)
         # self.viewbox.setMenuEnabled(False)
 
         # Playground image
@@ -48,6 +49,9 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.robot_radius = 10
         self.robot_pos = deque(maxlen=self.ROBOT_POS_BUFFER_SIZE)
         self.crosshair_visible = False
+        self.poly_plot = []
+        self.poi_size = 50
+        self.pois = []
 
         # Draw all table view items
         # self.draw_playground()
@@ -56,6 +60,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.draw_crosshair()
         self.draw_robot()
         self.draw_target()
+        self.draw_pois()
 
         # Proxys (connection) for mouse moves/clicks
         self.mouse_move_proxy = pg.SignalProxy(self.scene().sigMouseMoved, rateLimit=60,
@@ -152,6 +157,36 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.robot_coord_label = pg.LabelItem(justify='left')
         self.addItem(self.robot_coord_label)
 
+    def draw_pois(self):
+
+        self.poi_plot = self.plot_widget.plot(pen=None,
+                                              symbol='o', symbolPen=None, symbolSize=self.poi_size,
+                                              pxMode=False,
+                                              symbolBrush=(0, 0, 200, 150))
+        self.viewbox.addItem(self.poi_plot)
+
+
+    def add_poly(self, poly):
+
+        # Retrieve polygon coordinates
+        x = poly['x']
+        y = poly['y']
+
+        # Close the polygon
+        x.append(x[0])
+        y.append(y[0])
+
+        self.poly_plot.append(self.plot_widget.plot(pen=pg.mkPen(color=(200, 0, 0, 200), width=2),
+                                                    symbol=None,
+                                                    x=x, y=y))
+
+        self.viewbox.addItem(self.poly_plot[len(self.poly_plot)-1])
+
+    def clear_all_poly(self):
+
+        for poly in self.poly_plot:
+            self.viewbox.removeItem(poly)
+
     def set_playground_size(self, width, height):
         self.playground_size_mm[0] = width
         self.playground_size_mm[1] = height
@@ -190,6 +225,16 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.robot_angle_arrow.setStyle(headLen=self.robot_radius)
         self.update_arrow()
 
+    def set_poi_size(self, size):
+        self.poi_size = size
+        self.poi_plot.setSymbolSize(self.poi_size)
+
+    def set_poi_color(self, color):
+        self.poi_plot.setSymbolBrush(color)
+
+    def set_poi_visible(self, visible):
+        self.poi_plot.setVisible(visible)
+
     def draw_target(self):
         self.target_pos_plot = self.plot_widget.plot(pen=None,
                                                      symbol='+', symbolPen=None, symbolSize=100, pxMode=False,
@@ -222,6 +267,13 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
             "Y = %+05d<br />"
             "A = %+03d" % (
                 pos['x'], pos['y'], pos['a']))
+
+    def add_poi(self, poi):
+        self.pois.append(poi)
+        x = [item['x'] for item in self.pois]
+        y = [item['y'] for item in self.pois]
+
+        self.poi_plot.setData(x=x, y=y)
 
     def update_arrow(self):
         if len(self.robot_pos) > 0:

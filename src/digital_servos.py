@@ -149,9 +149,12 @@ class DigitalServos(QObject, Ui_DigitalServos):
         item_status.setFlags(flags)
         item_status.setForeground(item_color)
 
-        # Always resize to content at the end
+        # Always resize & stretch to content at the end
         self.tableWidget_servos.resizeColumnsToContents()
         self.tableWidget_servos.resizeRowsToContents()
+
+        horiz_header = self.tableWidget_servos.horizontalHeader()
+        horiz_header.setResizeMode(self.COLUMN_SERVO_MODEL, QHeaderView.Stretch)
 
     def add_register(self, item):
 
@@ -203,9 +206,12 @@ class DigitalServos(QObject, Ui_DigitalServos):
         self.tableWidget_registers.setItem(row, self.COLUMN_REGISTER_VALUE, item_value)
         self.tableWidget_registers.blockSignals(False)
 
-        # Always resize to content at the end
+        # Always resize & stretch to content at the end
         self.tableWidget_registers.resizeColumnsToContents()
         self.tableWidget_registers.resizeRowsToContents()
+
+        horiz_header = self.tableWidget_registers.horizontalHeader()
+        horiz_header.setResizeMode(self.COLUMN_REGISTER_NAME, QHeaderView.Stretch)
 
     # -------------------------------------------------------------------------
     # Slots & Binds
