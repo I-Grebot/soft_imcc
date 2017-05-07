@@ -8,6 +8,13 @@ from cx_Freeze import setup, Executable
 # Settings
 # -----------------------------------------------------------------------------
 
+# Program
+name = "soft_imcc"
+target_name = "IMCC"
+version = "1.1.0"
+description = "IgreBot 's Mission Control Center"
+author = "Bebop35"
+
 # Paths
 path = sys.path + ["ui", "graphics"]
 python_dir = os.path.split(sys.executable)[0]
@@ -23,8 +30,9 @@ packages = ['numpy', 'PIL', 'serial', 'pyqtgraph']
 
 # Include files
 includefiles = [# README.txt CHANGELOG.txt
-                'rc/imcc.png',
-                ('rc/table_2017.png', 'rc/table_2017.png')
+                ('rc/imcc.png', 'rc/imcc.png'),
+                ('rc/table_2017.png', 'rc/table_2017.png'),
+                ('../bin/stm32flash.exe', 'bin/stm32flash.exe')
                 ]
 
 if sys.platform == "win32":
@@ -49,7 +57,8 @@ optimize = 0
 silent = True
 
 # Options dictionary
-options = {"path": path,
+options = {"build_exe": "build/%s-v%s" % (target_name, version),
+           "path": path,
            "includes": includes,
            "excludes": excludes,
            "packages": packages,
@@ -81,7 +90,7 @@ if sys.platform == "win32":
 # -----------------------------------------------------------------------------
 
 target1 = Executable(
-    targetName="IMCC.exe",
+    targetName="%s.exe" % target_name,
     script="main.py",
     base=base,
     icon=bin_icon
@@ -92,10 +101,10 @@ target1 = Executable(
 # -----------------------------------------------------------------------------
 
 setup(
-    name="soft_imcc",
-    version="1.0.0",
-    description="IgreBot 's Mission Control Center",
-    author="Bebop35",
+    name=name,
+    version=version,
+    description=description,
+    author=author,
     options={"build_exe": options},
     executables=[target1]
 )

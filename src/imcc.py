@@ -59,6 +59,10 @@ class IMCC(QMainWindow):
         self.probe_started = False
         self.timer = QTimer()
 
+    # Override close event for proper exit with frozen appli
+    def closeEvent(self, *args, **kwargs):
+        self.deleteLater()
+
     # -------------------------------------------------------------------------
     # UI
     # -------------------------------------------------------------------------
