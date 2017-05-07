@@ -25,6 +25,7 @@ from console import Console
 from parameters import Parameters
 from variables import Variables
 from digital_servos import DigitalServos
+from sequencer import Sequencer
 from cli import Cli
 from robot import Robot
 from graphics.graphics import Graphics
@@ -50,6 +51,8 @@ class IMCC(QMainWindow):
 
         # Default states
         self.ui.actionViewBootload.trigger()
+        self.ui.actionViewDigital_Servos.trigger()
+        self.ui.actionViewSettings.trigger()
 
         # Variables for probe
         self.probe_list = list()
@@ -66,37 +69,57 @@ class IMCC(QMainWindow):
         self.stm32flash_dock = QDockWidget()
         self.stm32flash_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         self.stm32flash = Stm32Flash(self.stm32flash_dock)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.stm32flash_dock)
 
         # Adding the Console dock with serial and python console widgets
         self.console_dock = QDockWidget()
-        self.console_dock.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea)
+        self.console_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
+                                          QtCore.Qt.RightDockWidgetArea |
+                                          QtCore.Qt.BottomDockWidgetArea |
+                                          QtCore.Qt.TopDockWidgetArea)
         self.console = Console(self.console_dock, self.cli)
         self.python_console = pg.console.ConsoleWidget()
         self.console.tabWidget.addTab(self.python_console, "Python Console")
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.console_dock)
 
         # Add the Parameters dock
         self.parameters_dock = QDockWidget()
         self.parameters_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         self.parameters_dock.setWidget(self.parameters)
         self.parameters_dock.setWindowTitle("Parameters")
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
 
         # Add the Variables dock
         self.variables_dock = QDockWidget()
-        self.variables_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        self.variables_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
+                                            QtCore.Qt.RightDockWidgetArea |
+                                            QtCore.Qt.BottomDockWidgetArea |
+                                            QtCore.Qt.TopDockWidgetArea)
         self.variables = Variables(self.variables_dock, self.cli)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.variables_dock)
 
         # Add the DigitalServos dock
         self.digital_servos_dock = QDockWidget()
-        self.digital_servos_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        self.digital_servos_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
+                                                 QtCore.Qt.RightDockWidgetArea |
+                                                 QtCore.Qt.BottomDockWidgetArea |
+                                                 QtCore.Qt.TopDockWidgetArea)
         self.digital_servos = DigitalServos(self.digital_servos_dock, self.cli)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.digital_servos_dock)
+
+        # Add the Sequencer dock
+        self.sequencer_dock = QDockWidget()
+        self.sequencer_dock.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
+                                            QtCore.Qt.RightDockWidgetArea |
+                                            QtCore.Qt.BottomDockWidgetArea |
+                                            QtCore.Qt.TopDockWidgetArea)
+        self.sequencer = Sequencer(self.sequencer_dock, self.cli)
 
         # Create and place the main central widget
         self.graphics = Graphics()
+
+        # Widgets Layout
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.console_dock)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.stm32flash_dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sequencer_dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.variables_dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.digital_servos_dock)
         self.setCentralWidget(self.graphics.win)
 
         # Add some specific stuff to the toolbar
@@ -107,7 +130,7 @@ class IMCC(QMainWindow):
         self.toolbar_goto_comboBox.addItem('Turnto Front', 'turnto_front')
         self.toolbar_goto_comboBox.addItem('Turnto Behind', 'turnto_behind')
 
-        self.ui.toolBar.insertWidget(self.ui.actionStop, self.toolbar_goto_comboBox)
+        self.ui.toolBar.insertWidget(self.ui.actionStopMotion, self.toolbar_goto_comboBox)
 
         # Some default loads
         self.update_playground_size()
@@ -124,8 +147,6 @@ class IMCC(QMainWindow):
         self.ui.actionPower_ON.triggered[bool].connect(self.power_on)
         self.ui.actionPower_OFF.triggered[bool].connect(self.power_off)
 
-        self.ui.actionColor.triggered[bool].connect(self.set_team_color)
-
         self.ui.actionViewConsole.triggered[bool].connect(self.console_dock.setVisible)
         self.console_dock.visibilityChanged[bool].connect(self.ui.actionViewConsole.setChecked)
 
@@ -141,16 +162,26 @@ class IMCC(QMainWindow):
         self.ui.actionViewDigital_Servos.triggered[bool].connect(self.digital_servos_dock.setVisible)
         self.digital_servos_dock.visibilityChanged[bool].connect(self.ui.actionViewDigital_Servos.setChecked)
 
-        self.ui.actionPan.triggered[bool].connect(self.pan_mode)
-        self.ui.actionZoom.triggered[bool].connect(self.zoom_mode)
-        self.ui.actionGoto.triggered[bool].connect(self.goto_mode)
-        self.ui.actionStop.triggered.connect(self.stop)
         self.ui.actionViewSettings.triggered[bool].connect(self.graphics.widget_parameters.setVisible)
         self.ui.actionViewGraphs.triggered[bool].connect(self.graphics.action_view_graphs)
+
+        self.ui.actionViewSequencer.triggered[bool].connect(self.sequencer_dock.setVisible)
+        self.sequencer_dock.visibilityChanged[bool].connect(self.ui.actionViewSequencer.setChecked)
 
         self.parameters.robot_setting_changed.connect(self.update_robot)
         self.parameters.playground_size_changed.connect(self.update_playground_size)
         self.parameters.bootloader_path_changed.connect(self.update_bootload_path)
+
+        self.ui.actionPan.triggered[bool].connect(self.pan_mode)
+        self.ui.actionZoom.triggered[bool].connect(self.zoom_mode)
+        self.ui.actionGoto.triggered[bool].connect(self.goto_mode)
+        self.ui.actionStopMotion.triggered.connect(self.stop_motion)
+
+        self.ui.actionColor.triggered[bool].connect(self.set_team_color)
+        self.ui.actionInit.triggered[bool].connect(self.init_match)
+        self.ui.actionStart.triggered[bool].connect(self.start_match)
+        self.ui.actionPauseResume.triggered[bool].connect(self.pause_match)
+        self.ui.actionStop.triggered[bool].connect(self.stop_match)
 
         self.cli.data_available.connect(self.cli_process)
 
@@ -243,7 +274,7 @@ class IMCC(QMainWindow):
         print('%s %d %d' %(type_str, x, y))
         self.cli.send('mot %s %d %d\n' % (type_value, x, y))
 
-    def stop(self):
+    def stop_motion(self):
         print('Stopping motion')
         self.cli.send('mot stop\n')
 
@@ -270,7 +301,30 @@ class IMCC(QMainWindow):
 
         self.ui.actionColor.setIcon(icon_team)
 
-        print("Setting team color to " + team_color_str)
+        print("Setting team color to %s (#%u)" % (team_color_str, value))
+        self.cli.send("seq color %u\n" % value)
+
+    def init_match(self):
+        self.set_team_color(self.ui.actionColor.isChecked())
+        print("Initializing match sequence")
+        self.cli.send('seq init\n')
+
+    def start_match(self):
+        print("Starting the match!")
+        self.cli.send('seq start\n')
+
+    def pause_match(self, pause_not_resume):
+        if pause_not_resume:
+            print("Pausing the match...")
+            self.cli.send('seq pause\n')
+        else:
+            print("Resuming the match")
+            self.cli.send('seq resume\n')
+
+    def stop_match(self):
+        print("Stopping the match")
+        self.cli.send('seq abort\n')
+
 
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()

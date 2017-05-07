@@ -4,6 +4,7 @@ pyuic5 graphics.ui -o ..\src\ui\graphics.py
 pyuic5 console.ui -o ..\src\ui\console.py
 pyuic5 stm32flash.ui -o ..\src\ui\stm32flash.py
 pyuic5 digital_servos.ui -o ..\src\ui\digital_servos.py
+pyuic5 sequencer.ui -o ..\src\ui\sequencer.py
 
 pyrcc5 imcc.qrc -o ..\src\ui\imcc_rc.py
 

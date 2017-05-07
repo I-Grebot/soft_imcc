@@ -82,11 +82,13 @@
    <addaction name="actionPower_OFF"/>
    <addaction name="separator"/>
    <addaction name="actionGoto"/>
-   <addaction name="actionStop"/>
+   <addaction name="actionStopMotion"/>
    <addaction name="separator"/>
    <addaction name="actionColor"/>
-   <addaction name="actionRestart"/>
-   <addaction name="actionStartPause"/>
+   <addaction name="actionInit"/>
+   <addaction name="actionStart"/>
+   <addaction name="actionPauseResume"/>
+   <addaction name="actionStop"/>
    <addaction name="separator"/>
    <addaction name="actionViewConsole"/>
    <addaction name="actionViewBootload"/>
@@ -95,6 +97,7 @@
    <addaction name="actionViewDigital_Servos"/>
    <addaction name="actionViewSettings"/>
    <addaction name="actionViewGraphs"/>
+   <addaction name="actionViewSequencer"/>
   </widget>
   <action name="actionConnect">
    <property name="checkable">
@@ -274,13 +277,13 @@
     <string>Switch to Zoom mode</string>
    </property>
   </action>
-  <action name="actionStop">
+  <action name="actionStopMotion">
    <property name="icon">
     <iconset resource="imcc.qrc">
      <normaloff>:/icons/fugue/icons/minus-circle.png</normaloff>:/icons/fugue/icons/minus-circle.png</iconset>
    </property>
    <property name="text">
-    <string>Stop</string>
+    <string>Stop Motion</string>
    </property>
    <property name="toolTip">
     <string>Cancel any motion</string>
@@ -298,38 +301,38 @@
      <normaloff>:/icons/fugue/icons/flag-blue.png</normaloff>:/icons/fugue/icons/flag-blue.png</iconset>
    </property>
    <property name="text">
-    <string>Color</string>
+    <string>Match Color</string>
    </property>
    <property name="toolTip">
     <string>Select match color</string>
    </property>
   </action>
-  <action name="actionRestart">
+  <action name="actionStart">
    <property name="icon">
     <iconset resource="imcc.qrc">
-     <normaloff>:/icons/silk/control_start_blue.png</normaloff>:/icons/silk/control_start_blue.png</iconset>
+     <normaloff>:/icons/silk/control_play_blue.png</normaloff>:/icons/silk/control_play_blue.png</iconset>
    </property>
    <property name="text">
-    <string>Restart</string>
+    <string>Match Start</string>
    </property>
    <property name="toolTip">
-    <string>Restart match sequence</string>
+    <string>Start the match sequence</string>
    </property>
   </action>
-  <action name="actionStartPause">
+  <action name="actionPauseResume">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="imcc.qrc">
-     <normaloff>:/icons/silk/control_pause.png</normaloff>
-     <normalon>:/icons/silk/control_play_blue.png</normalon>:/icons/silk/control_pause.png</iconset>
+     <normaloff>:/icons/silk/control_pause_blue.png</normaloff>
+     <normalon>:/icons/silk/control_pause.png</normalon>:/icons/silk/control_pause_blue.png</iconset>
    </property>
    <property name="text">
-    <string>StartPause</string>
+    <string>Match Pause</string>
    </property>
    <property name="toolTip">
-    <string>Start or pause match sequence</string>
+    <string>Pause (and resume) match sequence</string>
    </property>
   </action>
   <action name="actionViewSettings">
@@ -362,7 +365,7 @@
      <normaloff>:/icons/silk/chart_curve.png</normaloff>:/icons/silk/chart_curve.png</iconset>
    </property>
    <property name="text">
-    <string>ViewGraphs</string>
+    <string>Graphics</string>
    </property>
    <property name="toolTip">
     <string>Show / Hide graphics windows</string>
@@ -405,6 +408,48 @@
    </property>
    <property name="toolTip">
     <string>Power OFF</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/control_stop_blue.png</normaloff>:/icons/silk/control_stop_blue.png</iconset>
+   </property>
+   <property name="text">
+    <string>Match Stop</string>
+   </property>
+   <property name="toolTip">
+    <string>Stop the match sequence</string>
+   </property>
+  </action>
+  <action name="actionInit">
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/house_go.png</normaloff>:/icons/silk/house_go.png</iconset>
+   </property>
+   <property name="text">
+    <string>Match Init</string>
+   </property>
+   <property name="toolTip">
+    <string>Initialize the match sequence</string>
+   </property>
+  </action>
+  <action name="actionViewSequencer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="imcc.qrc">
+     <normaloff>:/icons/silk/script.png</normaloff>:/icons/silk/script.png</iconset>
+   </property>
+   <property name="text">
+    <string>ViewSequencer</string>
+   </property>
+   <property name="toolTip">
+    <string>Show / Hide sequencer panel</string>
    </property>
   </action>
  </widget>

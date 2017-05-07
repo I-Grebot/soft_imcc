@@ -21,7 +21,8 @@ FORMS += \
     imcc.ui \
     stm32flash.ui \
     variables.ui \
-    digital_servos.ui
+    digital_servos.ui \
+    sequencer.ui
 
 RESOURCES += \
     imcc.qrc
