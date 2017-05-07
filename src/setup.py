@@ -10,7 +10,11 @@ from cx_Freeze import setup, Executable
 
 # Program
 name = "soft_imcc"
+<<<<<<< HEAD
 target_name = "IMCC"
+=======
+target_name = "IMCC.exe"
+>>>>>>> 2017_T1_R1
 version = "1.1.0"
 description = "IgreBot 's Mission Control Center"
 author = "Bebop35"
@@ -57,7 +61,11 @@ optimize = 0
 silent = True
 
 # Options dictionary
+<<<<<<< HEAD
 options = {"build_exe": "build/%s-v%s" % (target_name, version),
+=======
+options = {"build_exe": "build/%s" % version,
+>>>>>>> 2017_T1_R1
            "path": path,
            "includes": includes,
            "excludes": excludes,
@@ -90,7 +98,11 @@ if sys.platform == "win32":
 # -----------------------------------------------------------------------------
 
 target1 = Executable(
+<<<<<<< HEAD
     targetName="%s.exe" % target_name,
+=======
+    targetName=target_name,
+>>>>>>> 2017_T1_R1
     script="main.py",
     base=base,
     icon=bin_icon
