@@ -99,6 +99,16 @@ class IMCC(QMainWindow):
         self.graphics = Graphics()
         self.setCentralWidget(self.graphics.win)
 
+        # Add some specific stuff to the toolbar
+        self.toolbar_goto_comboBox = QComboBox()
+        self.toolbar_goto_comboBox.addItem('Goto Auto', 'goto_auto')
+        self.toolbar_goto_comboBox.addItem('Goto Forward', 'goto_fwd')
+        self.toolbar_goto_comboBox.addItem('Goto Backward', 'goto_bwd')
+        self.toolbar_goto_comboBox.addItem('Turnto Front', 'turnto_front')
+        self.toolbar_goto_comboBox.addItem('Turnto Behind', 'turnto_behind')
+
+        self.ui.toolBar.insertWidget(self.ui.actionStop, self.toolbar_goto_comboBox)
+
         # Some default loads
         self.update_playground_size()
         self.update_robot()
@@ -228,8 +238,10 @@ class IMCC(QMainWindow):
         self.graphics.goto_mode = val
 
     def goto(self, x, y):
-        print('Goto %d %d' %(x, y))
-        self.cli.send('mot goto %d %d\n' % (x, y))
+        type_str = self.toolbar_goto_comboBox.currentText()
+        type_value = self.toolbar_goto_comboBox.currentData()
+        print('%s %d %d' %(type_str, x, y))
+        self.cli.send('mot %s %d %d\n' % (type_value, x, y))
 
     def stop(self):
         print('Stopping motion')
