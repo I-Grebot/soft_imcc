@@ -100,3 +100,7 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+*.iml
+
+\.idea/misc\.xml
