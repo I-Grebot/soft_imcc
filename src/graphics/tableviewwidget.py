@@ -12,6 +12,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
     # Constants
     ROBOT_POS_BUFFER_SIZE = 200
+    SENSORS_WIDTH         = 30
 
     # Attributes
     playground_size_px = tuple()
@@ -52,6 +53,11 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.poly_plot = []
         self.poi_size = 50
         self.pois = []
+        self.sensor_brush_inactive = pg.mkBrush(color=(100, 100, 100, 200), width=self.SENSORS_WIDTH)
+        self.sensor_brush_active   = pg.mkBrush(color=(0, 200, 0, 200), width=self.SENSORS_WIDTH)
+        self.sensor_brush_detect   = pg.mkBrush(color=(200, 0, 0, 200), width=self.SENSORS_WIDTH)
+
+        self.robot_sensors = []
 
         # Draw all table view items
         # self.draw_playground()
@@ -61,6 +67,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.draw_robot()
         self.draw_target()
         self.draw_pois()
+
 
         # Proxys (connection) for mouse moves/clicks
         self.mouse_move_proxy = pg.SignalProxy(self.scene().sigMouseMoved, rateLimit=60,
@@ -153,9 +160,19 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                               pxMode=False)
         self.viewbox.addItem(self.robot_angle_arrow)
 
+        # Plot of the robot sensors
+        self.robot_sensors_plot = self.plot_widget.plot(pen=None,
+                                                        brush=None,
+                                                        pxMode=False,
+                                                        symbolSize=self.SENSORS_WIDTH,
+                                                        name='Robot Sensors')
+
+        self.viewbox.addItem(self.robot_sensors_plot)
+
         # Coordinate label
         self.robot_coord_label = pg.LabelItem(justify='left')
         self.addItem(self.robot_coord_label)
+
 
     def draw_pois(self):
 
@@ -242,6 +259,18 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                                      name='Target position')
         self.viewbox.addItem(self.target_pos_plot)
 
+    def add_robot_sensor(self, angle):
+        print("Add new at %d" % angle)
+        sensor = {
+            'a': angle,
+            's': 'inactive'
+        }
+        self.robot_sensors.append(sensor)
+
+    def set_robot_sensor_state(self, index, state):
+        if index <= len(self.robot_sensors):
+            self.robot_sensors[index]['s'] = state
+
     def add_robot_pos(self, pos):
         self.robot_pos.append(pos)
         x = [item['x'] for item in self.robot_pos]
@@ -259,6 +288,9 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
         # Redraw the orientation arrow
         self.update_arrow()
+
+        # Redraw sensors
+        self.update_robot_sensors()
 
         # Update label
         self.robot_coord_label.setText(
@@ -281,6 +313,35 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
             self.robot_angle_arrow.setPos(QPoint(last_pos['x'] + self.robot_radius * np.cos(np.radians(last_pos['a'])),
                                                  last_pos['y'] + self.robot_radius * np.sin(np.radians(last_pos['a']))))
             self.robot_angle_arrow.setRotation(last_pos['a'])  # Bug in the setStyle of ArrowItem() class
+
+    def update_robot_sensors(self):
+
+        # Retrieve current robot position
+        robot_x = self.robot_pos[-1]['x']
+        robot_y = self.robot_pos[-1]['y']
+        robot_a = self.robot_pos[-1]['a']
+
+        x = []
+        y = []
+        brushs = []
+
+        # For each sensor, given its state and relative position, redraw it
+        for sensor in self.robot_sensors:
+
+            sensor_x = int(robot_x + (self.robot_radius + self.SENSORS_WIDTH/2) * np.cos(np.radians(robot_a + sensor['a'])))
+            sensor_y = int(robot_y + (self.robot_radius + self.SENSORS_WIDTH/2) * np.sin(np.radians(robot_a + sensor['a'])))
+
+            if sensor['s'] == 'active':
+                brushs.append(self.sensor_brush_active)
+            elif sensor['s'] == 'detection':
+                brushs.append(self.sensor_brush_detect)
+            else:
+                brushs.append(self.sensor_brush_inactive)
+
+            x.append(sensor_x)
+            y.append(sensor_y)
+
+        self.robot_sensors_plot.setData(x=x, y=y, symbolBrush=brushs, symbol='o')
 
     def update_target_pos(self, x, y):
         self.target_pos_plot.setData(x=[x], y=[y])

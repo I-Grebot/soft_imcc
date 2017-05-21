@@ -140,6 +140,10 @@ class IMCC(QMainWindow):
         self.update_playground_size()
         self.update_robot()
 
+        # Add avoidance sensors
+        for index, position in self.robot.get_av_positions().items():
+            self.graphics.table.add_robot_sensor(position)
+
 
     def connect(self):
 
@@ -432,9 +436,18 @@ class IMCC(QMainWindow):
                             self.robot.set_y(val)
                         elif var == self.parameters.get_robot_a_variable():
                             self.robot.set_a(val)
+                        elif var == self.parameters.get_avoidance_mask_variable():
+                            self.robot.set_avoidance_mask(val)
+                        elif var == self.parameters.get_avoidance_det_variable():
+                            self.robot.set_avoidance_detection(val)
 
                 if self.parameters.get_robot_update_data():
                     self.graphics.table.add_robot_pos(self.robot.get_pos())
+
+                    for i, state in self.robot.get_av_states().items():
+                        self.graphics.table.set_robot_sensor_state(i, state)
+
+                    self.graphics.table.update_robot_sensors()
 
             elif ret_str.startswith('[VAR]'):
 

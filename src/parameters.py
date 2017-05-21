@@ -60,6 +60,8 @@ class Parameters(ParameterTree):
             {'name': 'X Variable', 'type': 'str', 'value': 'robot.cs.pos.x'},
             {'name': 'Y Variable', 'type': 'str', 'value': 'robot.cs.pos.y'},
             {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'},
+            {'name': 'Avoidance Mask Variable', 'type': 'str', 'value': 'av.mask'},
+            {'name': 'Avoidance Detection Variable', 'type': 'str', 'value': 'av.det'},
             {'name': 'Radius', 'type': 'int', 'value': 150, 'int': True, 'suffix': 'mm'}
         ]},
         {'name': 'Digital Servos', 'type': 'group', 'children': [
@@ -123,6 +125,12 @@ class Parameters(ParameterTree):
 
     def get_robot_a_variable(self):
         return self.p.param("Robot").param("A Variable").value()
+
+    def get_avoidance_mask_variable(self):
+        return self.p.param("Robot").param("Avoidance Mask Variable").value()
+
+    def get_avoidance_det_variable(self):
+        return self.p.param("Robot").param("Avoidance Detection Variable").value()
 
     def get_robot_radius(self):
         return self.p.param("Robot").param("Radius").value()
