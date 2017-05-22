@@ -205,6 +205,9 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         for poly in self.poly_plot:
             self.viewbox.removeItem(poly)
 
+    def clear_all_pois(self):
+        self.poly_plot.clear()
+
     def set_playground_size(self, width, height):
         self.playground_size_mm[0] = width
         self.playground_size_mm[1] = height
@@ -261,7 +264,6 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.viewbox.addItem(self.target_pos_plot)
 
     def add_robot_sensor(self, angle):
-        print("Add new at %d" % angle)
         sensor = {
             'a': angle,
             's': 'inactive'

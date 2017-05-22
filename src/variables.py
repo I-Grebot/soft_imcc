@@ -52,6 +52,7 @@ class Variables(QObject, Ui_Variables):
     def clear_table(self):
         self.tableWidget_variables.setRowCount(0)
 
+    # TODO: move to IMCC
     def refresh_table(self):
 
         # Start to clear previous rows
