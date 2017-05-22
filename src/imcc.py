@@ -436,10 +436,14 @@ class IMCC(QMainWindow):
                             self.robot.set_y(val)
                         elif var == self.parameters.get_robot_a_variable():
                             self.robot.set_a(val)
-                        elif var == self.parameters.get_avoidance_mask_variable():
-                            self.robot.set_avoidance_mask(val)
+                        elif var == self.parameters.get_avoidance_mask_static_variable():
+                            self.robot.set_avoidance_mask_static(val)
+                        elif var == self.parameters.get_avoidance_mask_dynamic_variable():
+                            self.robot.set_avoidance_mask_dynamic(val)
                         elif var == self.parameters.get_avoidance_det_variable():
                             self.robot.set_avoidance_detection(val)
+                        elif var == self.parameters.get_avoidance_det_effective_variable():
+                            self.robot.set_avoidance_effective_detection(val)
 
                 if self.parameters.get_robot_update_data():
                     self.graphics.table.add_robot_pos(self.robot.get_pos())

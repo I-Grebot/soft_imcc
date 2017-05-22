@@ -32,7 +32,16 @@ class Robot:
             'br': 135,
         }
 
-        self.av_mask = {
+        self.av_mask_static = {
+            'fl': 0,
+            'fc': 0,
+            'fr': 0,
+            'bl': 0,
+            'bc': 0,
+            'br': 0,
+        }
+
+        self.av_mask_dynamic = {
             'fl': 0,
             'fc': 0,
             'fr': 0,
@@ -50,6 +59,14 @@ class Robot:
             'br': 0,
         }
 
+        self.av_det_eff = {
+            'fl': 0,
+            'fc': 0,
+            'fr': 0,
+            'bl': 0,
+            'bc': 0,
+            'br': 0,
+        }
 
     def set_x(self, x):
         self.pos['x'] = x
@@ -60,13 +77,21 @@ class Robot:
     def set_a(self, a):
         self.pos['a'] = a
 
-    def set_avoidance_mask(self, val):
-        self.av_mask['fl'] = (val >> 0) & 1
-        self.av_mask['fc'] = (val >> 1) & 1
-        self.av_mask['fr'] = (val >> 2) & 1
-        self.av_mask['bl'] = (val >> 3) & 1
-        self.av_mask['bc'] = (val >> 4) & 1
-        self.av_mask['br'] = (val >> 5) & 1
+    def set_avoidance_mask_static(self, val):
+        self.av_mask_static['fl'] = (val >> 0) & 1
+        self.av_mask_static['fc'] = (val >> 1) & 1
+        self.av_mask_static['fr'] = (val >> 2) & 1
+        self.av_mask_static['bl'] = (val >> 3) & 1
+        self.av_mask_static['bc'] = (val >> 4) & 1
+        self.av_mask_static['br'] = (val >> 5) & 1
+
+    def set_avoidance_mask_dynamic(self, val):
+        self.av_mask_dynamic['fl'] = (val >> 0) & 1
+        self.av_mask_dynamic['fc'] = (val >> 1) & 1
+        self.av_mask_dynamic['fr'] = (val >> 2) & 1
+        self.av_mask_dynamic['bl'] = (val >> 3) & 1
+        self.av_mask_dynamic['bc'] = (val >> 4) & 1
+        self.av_mask_dynamic['br'] = (val >> 5) & 1
 
     def set_avoidance_detection(self, val):
         self.av_det['fl'] = (val >> 0) & 1
@@ -75,6 +100,14 @@ class Robot:
         self.av_det['bl'] = (val >> 3) & 1
         self.av_det['bc'] = (val >> 4) & 1
         self.av_det['br'] = (val >> 5) & 1
+
+    def set_avoidance_effective_detection(self, val):
+        self.av_det_eff['fl'] = (val >> 0) & 1
+        self.av_det_eff['fc'] = (val >> 1) & 1
+        self.av_det_eff['fr'] = (val >> 2) & 1
+        self.av_det_eff['bl'] = (val >> 3) & 1
+        self.av_det_eff['bc'] = (val >> 4) & 1
+        self.av_det_eff['br'] = (val >> 5) & 1
 
     def get_pos(self):
         return self.pos
@@ -90,23 +123,23 @@ class Robot:
         }
         return positions
 
-
     def get_av_states(self):
         states = {
-            0: self.compute_state(self.av_mask['fl'], self.av_det['fl']),
-            1: self.compute_state(self.av_mask['fc'], self.av_det['fc']),
-            2: self.compute_state(self.av_mask['fr'], self.av_det['fr']),
-            3: self.compute_state(self.av_mask['bl'], self.av_det['bl']),
-            4: self.compute_state(self.av_mask['bc'], self.av_det['bc']),
-            5: self.compute_state(self.av_mask['br'], self.av_det['br']),
+            0: self.compute_state('fl'),
+            1: self.compute_state('fc'),
+            2: self.compute_state('fr'),
+            3: self.compute_state('bl'),
+            4: self.compute_state('bc'),
+            5: self.compute_state('br'),
         }
-
         return states
 
-    def compute_state(self, mask, det):
-        if mask == 0:
+    def compute_state(self, sensor):
+        if self.av_mask_static[sensor] == 0:
             return 'inactive'
-        elif det == 1:
+        elif self.av_mask_dynamic[sensor] == 0:
+            return 'ignore'
+        elif self.av_det_eff[sensor] == 1:
             return 'detection'
         else:
             return 'active'

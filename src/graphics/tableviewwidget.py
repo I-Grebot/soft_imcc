@@ -54,6 +54,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.poi_size = 50
         self.pois = []
         self.sensor_brush_inactive = pg.mkBrush(color=(100, 100, 100, 200), width=self.SENSORS_WIDTH)
+        self.sensor_brush_ignore   = pg.mkBrush(color=(200, 200, 0, 200), width=self.SENSORS_WIDTH)
         self.sensor_brush_active   = pg.mkBrush(color=(0, 200, 0, 200), width=self.SENSORS_WIDTH)
         self.sensor_brush_detect   = pg.mkBrush(color=(200, 0, 0, 200), width=self.SENSORS_WIDTH)
 
@@ -333,6 +334,8 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
             if sensor['s'] == 'active':
                 brushs.append(self.sensor_brush_active)
+            elif sensor['s'] == 'ignore':
+                brushs.append(self.sensor_brush_ignore)
             elif sensor['s'] == 'detection':
                 brushs.append(self.sensor_brush_detect)
             else:
