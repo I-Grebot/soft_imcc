@@ -161,6 +161,16 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                               pxMode=False)
         self.viewbox.addItem(self.robot_angle_arrow)
 
+        # Plot the path-finder path
+        self.path_plot = self.plot_widget.plot(pen=pg.mkPen(color=(0, 0, 150, 200), width=3),
+                                               symbol='o', symbolPen=None, symbolSize=20,
+                                               symbolBrush=(0, 0, 150, 200),
+                                               brush=None,
+                                               pxMode=False,
+                                               name='Path-finder path'
+                                               )
+        self.viewbox.addItem(self.path_plot)
+
         # Plot of the robot sensors
         self.robot_sensors_plot = self.plot_widget.plot(pen=None,
                                                         brush=None,
@@ -199,6 +209,12 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                                     x=x, y=y))
 
         self.viewbox.addItem(self.poly_plot[len(self.poly_plot)-1])
+
+    def set_path(self, path):
+        self.path_plot.setData(x=path['x'], y=path['y'])
+
+    def clear_path(self):
+        self.path_plot.clear()
 
     def clear_all_poly(self):
 

@@ -145,7 +145,6 @@ class IMCC(QMainWindow):
         for index, position in self.robot.get_av_positions().items():
             self.graphics.table.add_robot_sensor(position)
 
-
     def connect(self):
 
         # Connect ToolBar items
@@ -561,6 +560,26 @@ class IMCC(QMainWindow):
                     y.append(int(point_items[1]))
 
                 self.graphics.table.add_poly({'x': x, 'y': y})
+
+            elif ret_str.startswith('[AI] [PATH]'):
+
+                #self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[12:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                # Split items
+                path_items = ret_str.split(' ')
+                x = []
+                y = []
+                for point_str in path_items:
+                    point_items = point_str.split(';')
+                    x.append(int(point_items[0]))
+                    y.append(int(point_items[1]))
+
+                self.graphics.table.set_path({'x': x, 'y': y})
 
             elif ret_str.startswith('[TASK]'):
 
