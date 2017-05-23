@@ -53,6 +53,7 @@ class IMCC(QMainWindow):
         self.ui.actionViewBootload.trigger()
         self.ui.actionViewDigital_Servos.trigger()
         self.ui.actionViewSettings.trigger()
+        self.ui.actionViewParameters.trigger()
 
         # Variables for probe
         self.probe_list = list()
@@ -119,11 +120,11 @@ class IMCC(QMainWindow):
 
         # Widgets Layout
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.console_dock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.stm32flash_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sequencer_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.variables_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.digital_servos_dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.console_dock)
         self.setCentralWidget(self.graphics.win)
 
         # Add some specific stuff to the toolbar
@@ -473,7 +474,7 @@ class IMCC(QMainWindow):
                 # Display, it is not spammed on screen and would look odd with the header only
                 # TODO: remove echo mode from target, put instead interactive mode which does not echo nor
                 # display headers
-                self.console.append_text(ret_str)
+                #self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[5:]
@@ -541,7 +542,7 @@ class IMCC(QMainWindow):
 
             elif ret_str.startswith('[PHYS] [POLY]'):
 
-                self.console.append_text(ret_str)
+                #self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[13:]

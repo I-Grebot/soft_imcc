@@ -60,68 +60,83 @@ class Sequencer(QObject, Ui_Sequencer):
         # TODO...
         return False
 
+    # Find a row in the table, given the task ID
+    # If it does not exist, return a row pointing
+    # at a newly created row
+    def find_or_create_task_row(self, task_id):
+
+        # Loop on all rows, try to match the ID
+        for i in range(self.tableWidget_tasks.rowCount()):
+
+            if self.tableWidget_tasks.verticalHeaderItem(i).text() == task_id:
+                return self.tableWidget_tasks.rowAt(i)
+
+        # Add at the bottom of the array
+        row = self.tableWidget_tasks.rowCount()
+        self.tableWidget_tasks.insertRow(row)
+
+        return row
+
     def update_task(self, task):
 
-        # Check to see if task is already present (id lookup)
-        if ~self.is_task_present(task['id']):
+        # Get the row to edit for the task ID
+        row = self.find_or_create_task_row(task['id'])
 
-            # Add at the bottom of the array
-            row = self.tableWidget_tasks.rowCount()
-            self.tableWidget_tasks.insertRow(row)
+        # Label the Vertical header with the ID
+        self.tableWidget_tasks.setVerticalHeaderItem(row, QTableWidgetItem(task['id']))
 
-            # Label the Vertical header with the ID
-            self.tableWidget_tasks.setVerticalHeaderItem(row, QTableWidgetItem(task['id']))
+        task_name = QTableWidgetItem(task['name'])
+        task_name.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_NAME, task_name)
 
-            task_name = QTableWidgetItem(task['name'])
-            task_name.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_NAME, task_name)
+        task_state = QTableWidgetItem(task['state'])
 
-            task_state = QTableWidgetItem(task['state'])
+        # Default colors
+        fg_color = QColor(0, 0, 0)
+        bg_color = QColor(255, 255, 255)
 
-            # Default colors
-            fg_color = QColor(0, 0, 0)
-            bg_color = QColor(255, 255, 255)
+        # Differentiate few cases
+        if task['state'] == "SUCCESS":
+            bg_color = QColor(0, 200, 0)
+        elif task['state'] == "SUSPENDED":
+            fg_color = QColor(200, 200, 0)
+        elif task['state'] == "RUNNING":
+            fg_color = QColor(0, 200, 0)
+        elif task['state'] == "FAILED":
+            bg_color = QColor(200, 0, 0)
 
-            # Differentiate few cases
-            if task['state'] == "SUCCESS":
-                bg_color = QColor(0, 200, 0)
-            elif task['state'] == "SUSPENDED":
-                fg_color = QColor(200, 200, 0)
-            elif task['state'] == "RUNNING":
-                fg_color = QColor(0, 200, 0)
-            elif task['state'] == "FAILED":
-                bg_color = QColor(200, 0, 0)
+        task_state.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        task_state.setForeground(fg_color)
+        task_state.setBackground(bg_color)
 
-            task_state.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            task_state.setForeground(fg_color)
-            task_state.setBackground(bg_color)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_STATE, task_state)
 
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_STATE, task_state)
+        task_nb_dep = QTableWidgetItem(task['nb_dep'])
+        task_nb_dep.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_NB_DEP, task_nb_dep)
 
-            task_nb_dep = QTableWidgetItem(task['nb_dep'])
-            task_nb_dep.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_NB_DEP, task_nb_dep)
+        task_value = QTableWidgetItem(task['value'])
+        task_value.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_VALUE, task_value)
 
-            task_value = QTableWidgetItem(task['value'])
-            task_value.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_VALUE, task_value)
+        task_priority = QTableWidgetItem(task['priority'])
+        task_priority.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_PRIORITY, task_priority)
 
-            task_priority = QTableWidgetItem(task['priority'])
-            task_priority.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_PRIORITY, task_priority)
+        task_trials = QTableWidgetItem(task['trials'])
 
-            task_trials = QTableWidgetItem(task['trials'])
+        # Highlight when more than 1 trial
+        if int(task['trials']) > 1:
+            task_trials.setForeground(QColor(255, 0, 0))
 
-            # Highlight when more than 1 trial
-            if int(task['trials']) > 1:
-                task_trials.setForeground(QColor(255, 0, 0))
+        task_trials.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_TRIALS, task_trials)
 
-            task_trials.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            self.tableWidget_tasks.setItem(row, self.COLUMN_TASK_TRIALS, task_trials)
-
-            # Always resize to content at the end
-            self.tableWidget_tasks.resizeColumnsToContents()
-            self.tableWidget_tasks.resizeRowsToContents()
+        # Always resize to content at the end
+        self.tableWidget_tasks.resizeColumnsToContents()
+        self.tableWidget_tasks.resizeRowsToContents()
+        horiz_header = self.tableWidget_tasks.horizontalHeader()
+        horiz_header.setResizeMode(self.COLUMN_TASK_NAME, QHeaderView.Stretch)
 
     def set_match(self, match):
         self.state = match['state']
