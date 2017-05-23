@@ -561,12 +561,34 @@ class IMCC(QMainWindow):
 
                 self.graphics.table.add_poly({'x': x, 'y': y})
 
-            elif ret_str.startswith('[AI] [PATH]'):
+            elif ret_str.startswith('[PHYS] [RAY]'):
 
-                #self.console.append_text(ret_str)
+                self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[12:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                # Split items
+                ray_items = ret_str.split(' ')
+                ray_weight = ray_items[0]
+                ray_items.pop(0)
+                x = []
+                y = []
+                for point_str in ray_items:
+                    point_items = point_str.split(';')
+                    x.append(int(point_items[0]))
+                    y.append(int(point_items[1]))
+
+                self.graphics.table.add_ray({'x': x, 'y': y, 'w': ray_weight})
+
+            elif ret_str.startswith('[PHYS] [PATH]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[13:]
                 ret_str = self.cleanup_spaces(ret_str)
                 ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
 

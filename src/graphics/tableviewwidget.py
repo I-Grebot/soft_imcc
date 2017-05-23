@@ -50,6 +50,7 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.robot_radius = 10
         self.robot_pos = deque(maxlen=self.ROBOT_POS_BUFFER_SIZE)
         self.crosshair_visible = False
+        self.rays_plot = []
         self.poly_plot = []
         self.poi_size = 50
         self.pois = []
@@ -193,7 +194,6 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
                                               symbolBrush=(0, 0, 200, 150))
         self.viewbox.addItem(self.poi_plot)
 
-
     def add_poly(self, poly):
 
         # Retrieve polygon coordinates
@@ -210,6 +210,22 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
 
         self.viewbox.addItem(self.poly_plot[len(self.poly_plot)-1])
 
+    def add_ray(self, ray):
+
+        # Retrieve ray coordinates
+        x = ray['x']
+        y = ray['y']
+
+        # Close the polygon
+        x.append(x[0])
+        y.append(y[0])
+
+        self.rays_plot.append(self.plot_widget.plot(pen=pg.mkPen('b', width=1, style=Qt.DotLine),
+                                                    pxMode=True,
+                                                   x=x, y=y))
+
+        self.viewbox.addItem(self.rays_plot[len(self.rays_plot)-1])
+
     def set_path(self, path):
         self.path_plot.setData(x=path['x'], y=path['y'])
 
@@ -217,12 +233,15 @@ class TableViewWidget(pg.GraphicsLayoutWidget):
         self.path_plot.clear()
 
     def clear_all_poly(self):
-
         for poly in self.poly_plot:
             self.viewbox.removeItem(poly)
 
+    def clear_all_rays(self):
+        for ray in self.rays_plot:
+            self.viewbox.removeItem(ray)
+
     def clear_all_pois(self):
-        self.poly_plot.clear()
+        self.poi_plot.clear()
 
     def set_playground_size(self, width, height):
         self.playground_size_mm[0] = width
