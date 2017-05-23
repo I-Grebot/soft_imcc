@@ -60,6 +60,10 @@ class Parameters(ParameterTree):
             {'name': 'X Variable', 'type': 'str', 'value': 'robot.cs.pos.x'},
             {'name': 'Y Variable', 'type': 'str', 'value': 'robot.cs.pos.y'},
             {'name': 'A Variable', 'type': 'str', 'value': 'robot.cs.pos.a'},
+            {'name': 'Avd. Static Mask Variable', 'type': 'str', 'value': 'av.mask_static'},
+            {'name': 'Avd. Dynamic Mask Variable', 'type': 'str', 'value': 'av.mask_dynamic'},
+            {'name': 'Avd. Detection Variable', 'type': 'str', 'value': 'av.det'},
+            {'name': 'Avd. Effective Detection Variable', 'type': 'str', 'value': 'av.det_effective'},
             {'name': 'Radius', 'type': 'int', 'value': 150, 'int': True, 'suffix': 'mm'}
         ]},
         {'name': 'Digital Servos', 'type': 'group', 'children': [
@@ -123,6 +127,18 @@ class Parameters(ParameterTree):
 
     def get_robot_a_variable(self):
         return self.p.param("Robot").param("A Variable").value()
+
+    def get_avoidance_mask_static_variable(self):
+        return self.p.param("Robot").param("Avd. Static Mask Variable").value()
+
+    def get_avoidance_mask_dynamic_variable(self):
+        return self.p.param("Robot").param("Avd. Dynamic Mask Variable").value()
+
+    def get_avoidance_det_variable(self):
+        return self.p.param("Robot").param("Avd. Detection Variable").value()
+
+    def get_avoidance_det_effective_variable(self):
+        return self.p.param("Robot").param("Avd. Effective Detection Variable").value()
 
     def get_robot_radius(self):
         return self.p.param("Robot").param("Radius").value()

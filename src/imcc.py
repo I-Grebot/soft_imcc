@@ -53,6 +53,7 @@ class IMCC(QMainWindow):
         self.ui.actionViewBootload.trigger()
         self.ui.actionViewDigital_Servos.trigger()
         self.ui.actionViewSettings.trigger()
+        self.ui.actionViewParameters.trigger()
 
         # Variables for probe
         self.probe_list = list()
@@ -119,11 +120,11 @@ class IMCC(QMainWindow):
 
         # Widgets Layout
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.parameters_dock)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.console_dock)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.stm32flash_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.sequencer_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.variables_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.digital_servos_dock)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.console_dock)
         self.setCentralWidget(self.graphics.win)
 
         # Add some specific stuff to the toolbar
@@ -140,6 +141,9 @@ class IMCC(QMainWindow):
         self.update_playground_size()
         self.update_robot()
 
+        # Add avoidance sensors
+        for index, position in self.robot.get_av_positions().items():
+            self.graphics.table.add_robot_sensor(position)
 
     def connect(self):
 
@@ -195,6 +199,10 @@ class IMCC(QMainWindow):
         self.digital_servos.register_changed[int, int, str, str, str].connect(self.digital_servo_register_updated)
 
         self.graphics.goto_clicked[int, int].connect(self.goto)
+
+        self.sequencer.pushButton_get_polys.pressed.connect(self.get_polys)
+        self.sequencer.pushButton_get_pois.pressed.connect(self.get_pois)
+        self.sequencer.pushButton_get_tasks.pressed.connect(self.get_tasks)
 
     def set_status_bar_message(self, str):
         self.ui.statusbar.showMessage(str)
@@ -329,7 +337,6 @@ class IMCC(QMainWindow):
         print("Stopping the match")
         self.cli.send('seq abort\n')
 
-
     def probe_list_update(self):
         self.probe_list = self.variables.get_probe_list()
         self.graphics.set_probe_list(self.probe_list)
@@ -354,6 +361,18 @@ class IMCC(QMainWindow):
 
         probe_str += '\n'
         self.cli.send(probe_str)
+
+    def get_polys(self):
+        self.graphics.table.clear_all_poly()
+        self.cli.send('seq polys\n')
+
+    def get_pois(self):
+        self.graphics.table.clear_all_pois()
+        self.cli.send('seq pois\n')
+
+    def get_tasks(self):
+        self.sequencer.clear_tasks_table()
+        self.cli.send('seq tasks\n')
 
     @pyqtSlot(bool)
     def connect_com(self, checked):
@@ -432,21 +451,34 @@ class IMCC(QMainWindow):
                             self.robot.set_y(val)
                         elif var == self.parameters.get_robot_a_variable():
                             self.robot.set_a(val)
+                        elif var == self.parameters.get_avoidance_mask_static_variable():
+                            self.robot.set_avoidance_mask_static(val)
+                        elif var == self.parameters.get_avoidance_mask_dynamic_variable():
+                            self.robot.set_avoidance_mask_dynamic(val)
+                        elif var == self.parameters.get_avoidance_det_variable():
+                            self.robot.set_avoidance_detection(val)
+                        elif var == self.parameters.get_avoidance_det_effective_variable():
+                            self.robot.set_avoidance_effective_detection(val)
 
                 if self.parameters.get_robot_update_data():
                     self.graphics.table.add_robot_pos(self.robot.get_pos())
+
+                    for i, state in self.robot.get_av_states().items():
+                        self.graphics.table.set_robot_sensor_state(i, state)
+
+                    self.graphics.table.update_robot_sensors()
 
             elif ret_str.startswith('[VAR]'):
 
                 # Display, it is not spammed on screen and would look odd with the header only
                 # TODO: remove echo mode from target, put instead interactive mode which does not echo nor
                 # display headers
-                self.console.append_text(ret_str)
+                #self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[5:]
                 ret_str = self.cleanup_spaces(ret_str)
-                ret_str = re.sub('[^a-zA-Z0-9_./ ]+', '', ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ]+', '', ret_str)
 
                 # Split items, add it to the variable list if it matches the format
                 var_items = ret_str.split(' ')
@@ -509,12 +541,12 @@ class IMCC(QMainWindow):
 
             elif ret_str.startswith('[PHYS] [POLY]'):
 
-                self.console.append_text(ret_str)
+                #self.console.append_text(ret_str)
 
                 # Clean the string
                 ret_str = ret_str[13:]
                 ret_str = self.cleanup_spaces(ret_str)
-                ret_str = re.sub('[^a-zA-Z0-9_./ ;]+', '', ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
 
                 # Split items
                 poly_items = ret_str.split(' ')
@@ -528,6 +560,90 @@ class IMCC(QMainWindow):
                     y.append(int(point_items[1]))
 
                 self.graphics.table.add_poly({'x': x, 'y': y})
+
+            elif ret_str.startswith('[PHYS] [RAY]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[12:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                # Split items
+                ray_items = ret_str.split(' ')
+                ray_weight = ray_items[0]
+                ray_items.pop(0)
+                x = []
+                y = []
+                for point_str in ray_items:
+                    point_items = point_str.split(';')
+                    x.append(int(point_items[0]))
+                    y.append(int(point_items[1]))
+
+                self.graphics.table.add_ray({'x': x, 'y': y, 'w': ray_weight})
+
+            elif ret_str.startswith('[PHYS] [PATH]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[13:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                # Split items
+                path_items = ret_str.split(' ')
+                x = []
+                y = []
+                for point_str in path_items:
+                    point_items = point_str.split(';')
+                    x.append(int(point_items[0]))
+                    y.append(int(point_items[1]))
+
+                self.graphics.table.set_path({'x': x, 'y': y})
+
+            elif ret_str.startswith('[TASK]'):
+
+                self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[7:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                # Split items
+                task_items = ret_str.split(' ')
+                if len(task_items) == 7:
+                    task = {'id': task_items[0],
+                            'name': task_items[1],
+                            'state': task_items[2],
+                            'nb_dep': task_items[3],
+                            'trials': task_items[4],
+                            'priority': task_items[5],
+                            'value': task_items[6]
+                            }
+                    self.sequencer.update_task(task)
+
+            elif ret_str.startswith('[MATCH]'):
+
+                #self.console.append_text(ret_str)
+
+                # Clean the string
+                ret_str = ret_str[8:]
+                ret_str = self.cleanup_spaces(ret_str)
+                ret_str = re.sub('[^a-zA-Z0-9\-_./ ;]+', '', ret_str)
+
+                match_items = ret_str.split(' ')
+
+                if len(match_items) == 5:
+                    match = {'state': match_items[0],
+                             'color': match_items[1],
+                             'task': match_items[2],
+                             'timer': match_items[3],
+                             'points': match_items[4]
+                    }
+                    self.sequencer.set_match(match)
 
             # Default: print string
             else:
