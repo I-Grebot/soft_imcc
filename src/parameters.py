@@ -18,8 +18,8 @@ class Parameters(ParameterTree):
 
     params = [
         {'name': 'Communication', 'type': 'group', 'children': [
-            {'name': 'Port', 'type': 'list', 'values': {'COM12': 'COM12'},
-             'value': "COM12"},
+            {'name': 'Port', 'type': 'list', 'values': {'COM14': 'COM14'},
+             'value': "COM14"},
             {'name': 'Description', 'type': 'str', 'value': '', 'readonly': True},
             {'name': 'Refresh', 'type': 'action'},
         ]},
@@ -79,11 +79,12 @@ class Parameters(ParameterTree):
         self.p = Parameter.create(name='params', type='group', children=self.params)
         self.setParameters(self.p, showTop=False)
 
-        self.default_port = 'COM12' # TODO: move me
+        self.default_port = 'COM20' # TODO: move me
 
         self.connect()
 
         self.refresh_serial_ports()
+        self.p.param("Communication").param("Port").setValue(self.default_port)
 
     def connect(self):
         self.p.param("Communication").param("Port").sigValueChanged.connect(self.update_port_description)
@@ -163,7 +164,6 @@ class Parameters(ParameterTree):
             com_ports[port.device] = port.device
 
         self.p.param("Communication").param("Port").setOpts(limits=com_ports)
-        self.p.param("Communication").param("Port").setValue(self.default_port)
         self.update_port_description()
 
     def update_port_description(self):

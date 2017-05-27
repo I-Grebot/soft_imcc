@@ -143,4 +143,3 @@ class Robot:
             return 'detection'
         else:
             return 'active'
-
