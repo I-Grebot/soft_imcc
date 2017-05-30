@@ -11,7 +11,7 @@ from cx_Freeze import setup, Executable
 # Program
 name = "soft_imcc"
 target_name = "IMCC"
-version = "1.1.0"
+version = "1.2.0"
 description = "IgreBot 's Mission Control Center"
 author = "Bebop35"
 
