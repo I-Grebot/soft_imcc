@@ -11,7 +11,7 @@ from cx_Freeze import setup, Executable
 # Program
 name = "soft_imcc"
 target_name = "IMCC"
-version = "1.2.0"
+version = "1.3.0"
 description = "IgreBot 's Mission Control Center"
 author = "Bebop35"
 
@@ -31,7 +31,7 @@ packages = ['numpy', 'PIL', 'serial', 'pyqtgraph']
 # Include files
 includefiles = [# README.txt CHANGELOG.txt
                 ('rc/imcc.png', 'rc/imcc.png'),
-                ('rc/table_2017.png', 'rc/table_2017.png'),
+                ('rc/table_2018.png', 'rc/table_2018.png'),
                 ('../bin/stm32flash.exe', 'bin/stm32flash.exe')
                 ]
 
